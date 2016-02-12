@@ -30,6 +30,7 @@ def tokenize_partial(token_kind):
 token_patterns = [
     (r'/\*.*\*/', comment_new_line),
     (r'/\*.*', comment_error),
+    (r'/*.\*/', comment_error),
     (r'\n', new_line),
     (r'int', tokenize_partial(T_INT)),
     (r'void', tokenize_partial(T_VOID)),
