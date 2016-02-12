@@ -1,8 +1,71 @@
+from functools import partial
 from re import Scanner
 from sre_parse import FLAGS
 from sys import argv
 
 from mudd import *
+
+
+def new_line(scanner, token):
+    MuddScanner.line_number += 1
+
+
+def comment_new_line(scanner, token):
+    MuddScanner.line_number += token.count('\n')
+    return None
+
+
+def comment_error(scanner, token):
+    raise SyntaxError
+
+
+def tokenize(scanner, token, token_kind):
+    return Token(token_kind, MuddScanner.line_number, token)
+
+
+def tokenize_partial(token_kind):
+    return partial(tokenize, token_kind=token_kind)
+
+
+token_patterns = [
+    (r'/\*.*\*/', comment_new_line),
+    (r'/\*.*', comment_error),
+    (r'\n', new_line),
+    (r'int', tokenize_partial(T_INT)),
+    (r'void', tokenize_partial(T_VOID)),
+    (r'string', tokenize_partial(T_STRING)),
+    (r'if', tokenize_partial(T_IF)),
+    (r'else', tokenize_partial(T_ELSE)),
+    (r'while', tokenize_partial(T_WHILE)),
+    (r'return', tokenize_partial(T_RETURN)),
+    (r'writeln', tokenize_partial(T_WRITELN)),
+    (r'write', tokenize_partial(T_WRITE)),
+    (r'read', tokenize_partial(T_READ)),
+    (r';', tokenize_partial(T_SEMICOL)),
+    (r',', tokenize_partial(T_COMMA)),
+    (r'\[', tokenize_partial(T_LBRACK)),
+    (r'\]', tokenize_partial(T_RBRACK)),
+    (r'\{', tokenize_partial(T_LCURLY)),
+    (r'\}', tokenize_partial(T_RCURLY)),
+    (r'\(', tokenize_partial(T_LPAREN)),
+    (r'\)', tokenize_partial(T_RPAREN)),
+    (r'<=', tokenize_partial(T_LEQ)),
+    (r'<', tokenize_partial(T_LES)),
+    (r'==', tokenize_partial(T_EQU)),
+    (r'!=', tokenize_partial(T_NEQ)),
+    (r'>=', tokenize_partial(T_GEQ)),
+    (r'>', tokenize_partial(T_GRE)),
+    (r'\+', tokenize_partial(T_PLU)),
+    (r'-', tokenize_partial(T_MIN)),
+    (r'\*', tokenize_partial(T_MUL)),
+    (r'/', tokenize_partial(T_DIV)),
+    (r'%', tokenize_partial(T_MOD)),
+    (r'&', tokenize_partial(T_AND)),
+    (r'=', tokenize_partial(T_ASSIGN)),
+    (r'[a-zA-Z][a-zA-Z0-9_]*', tokenize_partial(T_ID)),
+    (r'\d+', tokenize_partial(T_NUM)),
+    (r'\s+', None),  # ignore whitespace
+    ]
 
 
 class Token():
@@ -45,196 +108,6 @@ class MuddScanner():
         else:
             self.next_token = self.data[self.current_index]
             self.current_index += 1
-
-
-def t_int(scanner, token):
-    return Token(T_INT, MuddScanner.line_number, token)
-
-
-def t_num(scanner, token):
-    return Token(T_NUM, MuddScanner.line_number, token)
-
-
-def t_id(scanner, token):
-    return Token(T_ID, MuddScanner.line_number, token)
-
-
-def t_void(scanner, token):
-    return Token(T_VOID, MuddScanner.line_number, token)
-
-
-def t_string(scanner, token):
-    return Token(T_STRING, MuddScanner.line_number, token)
-
-
-def t_if(scanner, token):
-    return Token(T_IF, MuddScanner.line_number, token)
-
-
-def t_else(scanner, token):
-    return Token(T_ELSE, MuddScanner.line_number, token)
-
-
-def t_while(scanner, token):
-    return Token(T_WHILE, MuddScanner.line_number, token)
-
-
-def t_return(scanner, token):
-    return Token(T_RETURN, MuddScanner.line_number, token)
-
-
-def t_writeln(scanner, token):
-    return Token(T_WRITELN, MuddScanner.line_number, token)
-
-
-def t_write(scanner, token):
-    return Token(T_WRITE, MuddScanner.line_number, token)
-
-
-def t_read(scanner, token):
-    return Token(T_READ, MuddScanner.line_number, token)
-
-
-def t_semicol(scanner, token):
-    return Token(T_SEMICOL, MuddScanner.line_number, token)
-
-
-def t_comma(scanner, token):
-    return Token(T_COMMA, MuddScanner.line_number, token)
-
-
-def t_lbrack(scanner, token):
-    return Token(T_LBRACK, MuddScanner.line_number, token)
-
-
-def t_rbrack(scanner, token):
-    return Token(T_RBRACK, MuddScanner.line_number, token)
-
-
-def t_lcurly(scanner, token):
-    return Token(T_LCURLY, MuddScanner.line_number, token)
-
-
-def t_rcurly(scanner, token):
-    return Token(T_RCURLY, MuddScanner.line_number, token)
-
-
-def t_lparen(scanner, token):
-    return Token(T_LPAREN, MuddScanner.line_number, token)
-
-
-def t_rparen(scanner, token):
-    return Token(T_RPAREN, MuddScanner.line_number, token)
-
-
-def t_leq(scanner, token):
-    return Token(T_LEQ, MuddScanner.line_number, token)
-
-
-def t_les(scanner, token):
-    return Token(T_LES, MuddScanner.line_number, token)
-
-
-def t_equ(scanner, token):
-    return Token(T_EQU, MuddScanner.line_number, token)
-
-
-def t_neq(scanner, token):
-    return Token(T_NEQ, MuddScanner.line_number, token)
-
-
-def t_geq(scanner, token):
-    return Token(T_GEQ, MuddScanner.line_number, token)
-
-
-def t_gre(scanner, token):
-    return Token(T_GRE, MuddScanner.line_number, token)
-
-
-def t_plu(scanner, token):
-    return Token(T_PLU, MuddScanner.line_number, token)
-
-
-def t_min(scanner, token):
-    return Token(T_MIN, MuddScanner.line_number, token)
-
-
-def t_mul(scanner, token):
-    return Token(T_MUL, MuddScanner.line_number, token)
-
-
-def t_div(scanner, token):
-    return Token(T_DIV, MuddScanner.line_number, token)
-
-
-def t_mod(scanner, token):
-    return Token(T_MOD, MuddScanner.line_number, token)
-
-
-def t_and(scanner, token):
-    return Token(T_AND, MuddScanner.line_number, token)
-
-
-def t_eof(scanner, token):
-    return Token(T_NEQ, MuddScanner.line_number, None)
-
-
-def t_assign(scanner, token):
-    return Token(T_ASSIGN, MuddScanner.line_number, token)
-
-
-def new_line(scanner, token):
-    MuddScanner.line_number += 1
-
-
-def comment_new_line(scanner, token):
-    MuddScanner.line_number += token.count('\n')
-    return None
-
-
-def comment_error(scanner, token):
-    raise SyntaxError
-
-
-token_patterns = [
-    (r'/\*.*\*/', comment_new_line),
-    (r'/\*.*', comment_error),
-    (r'\n', new_line),
-    (r'int', t_int),
-    (r'void', t_void),
-    (r'string', t_string),
-    (r'if', t_if),
-    (r'else', t_else),
-    (r'while', t_while),
-    (r'return', t_return),
-    (r'writeln', t_writeln),
-    (r'write', t_write),
-    (r'read', t_read),
-    (r';', t_semicol),
-    (r',', t_comma),
-    (r'\[', t_lbrack),
-    (r'\]', t_rbrack),
-    (r'\{', t_lcurly),
-    (r'\}', t_rcurly),
-    (r'\(', t_lparen),
-    (r'\)', t_rparen),
-    (r'<=', t_leq),
-    (r'<', t_les),
-    (r'==', t_equ),
-    (r'!=', t_neq),
-    (r'>=', t_geq),
-    (r'>', t_gre),
-    (r'\+', t_plu),
-    (r'-', t_min),
-    (r'\*', t_mul),
-    (r'/', t_div),
-    (r'%', t_mod),
-    (r'&', t_and),
-    (r'=', t_assign),
-    (r'[a-zA-Z][a-zA-Z0-9_]*', t_id),
-    (r'\d+', t_num),
-    (r'\s+', None),  # ignore whitespace
-    ]
 
 
 if __name__ == '__main__':
