@@ -1,5 +1,5 @@
-from scanner import Token, MuddScanner as Scanner
-from scanner import T_INT, T_ID, T_EOF
+from mudd import T_INT, T_ID, T_EOF
+from mudd.scanner import Token, MuddScanner as Scanner
 
 
 def test_token():
@@ -38,6 +38,6 @@ def test_scanner_get_next_token(scanner):
     assert True
 
 
-if __name__ == '__main__':
+def test_all():
     test_token()
     test_scanner()
