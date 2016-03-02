@@ -1,3 +1,5 @@
+# BPL Tokens
+
 # End-of-file
 T_EOF = 100
 # Keywords
@@ -41,3 +43,11 @@ T_RCOM = 197
 T_ID = 198
 # Numbers
 T_NUM = 199
+# Strings
+T_STRLIT = 194
+
+# BPL Non-terminals
+N_PROGRAM = 200
+N_STATEMENT = 201
+N_EXPRESSION_STMT = 202
+N_EXPRESSION = 203

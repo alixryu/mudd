@@ -1,5 +1,6 @@
-from mudd import T_EOF
-from mudd.parser import MuddParser
+from mudd import T_SEMICOL, T_ID
+from mudd import N_PROGRAM, N_STATEMENT, N_EXPRESSION_STMT, N_EXPRESSION
+from mudd.parser import MuddParser, ParseTree
 
 
 def test_parse_constructor():
@@ -10,18 +11,23 @@ def test_parse_constructor():
     assert 'parse_tree' in test_parser_attributes
 
 
-def test_parse():
+def test_parse_tree_constructor():
     parser = MuddParser('factorial.bpl')
-    # test reaching reject
-    assert parser.parse() is None
+    parser.scanner.get_next_token()
+    token = parser.scanner.next_token
+    parse_tree = ParseTree(token)
+    assert 'children' in parse_tree.__dict__.keys()
+    assert 'kind' in parse_tree.__dict__.keys()
 
-    # test reaching accept by EOF
-    scanner = parser.scanner
-    trigger = True
-    while trigger:
-        scanner.get_next_token()
-        token = scanner.next_token
-        if token.kind == T_EOF:
-            trigger = False
 
-    assert parser.parse() is None
+def test_parse():
+    parser = MuddParser('test_parser.bpl')
+    # test reaching accpet by T_EOF
+    tree = parser.parse()
+    assert tree is not None
+    assert tree.kind == N_PROGRAM
+    assert tree.children[0].kind == N_STATEMENT
+    assert tree.children[0].children[0].kind == N_EXPRESSION_STMT
+    assert tree.children[0].children[0].children[0].kind == N_EXPRESSION
+    assert tree.children[0].children[0].children[0].children[0].kind == T_ID
+    assert tree.children[0].children[0].children[1].kind == T_SEMICOL
