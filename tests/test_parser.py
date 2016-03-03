@@ -1,6 +1,4 @@
-from mudd import T_SEMICOL, T_ID, T_LCURLY, T_RCURLY
-from mudd import N_PROGRAM, N_STATEMENT, N_EXPRESSION_STMT, N_EXPRESSION
-from mudd import N_STATEMENT_LIST, N_COMPOUND_STMT
+from mudd import *
 from mudd.parser import MuddParser, ParseTree
 
 
@@ -46,5 +44,31 @@ def test_parse_statement_only_compound_statement():
     assert tree.children[0].children[0].kind == N_COMPOUND_STMT
     assert tree.children[0].children[0].children[0].kind == T_LCURLY
     assert tree.children[0].children[0].children[-1].kind == T_RCURLY
-    statement_list = tree.children[0].children[0].children[1].children[0].kind
-    assert statement_list == N_STATEMENT_LIST
+    statement_list = tree.children[0].children[0].children[1].children[0]
+    assert statement_list.kind == N_STATEMENT_LIST
+    assert statement_list.children[0].kind == N_STATEMENT_LIST
+    assert statement_list.children[1].kind == N_STATEMENT
+
+
+def test_parse_while_statement():
+    parser = MuddParser(
+        'tests/test_parse_statement_only_compound_statement.bpl'
+        )
+    tree = parser.parse()
+    print(tree)
+    assert tree is not None
+    assert tree.kind == N_PROGRAM
+    assert tree.children[0].kind == N_STATEMENT
+    assert tree.children[0].children[0].kind == N_COMPOUND_STMT
+    assert tree.children[0].children[0].children[0].kind == T_LCURLY
+    assert tree.children[0].children[0].children[-1].kind == T_RCURLY
+    statement_list = tree.children[0].children[0].children[1].children[0]
+    assert statement_list.kind == N_STATEMENT_LIST
+    assert statement_list.children[1].kind == N_STATEMENT
+    assert statement_list.children[1].children[0].kind == N_WHILE_STMT
+    while_statement = statement_list.children[1].children[0]
+    assert while_statement.children[0].kind == T_WHILE
+    assert while_statement.children[1].kind == T_LPAREN
+    assert while_statement.children[2].kind == N_EXPRESSION
+    assert while_statement.children[3].kind == T_RPAREN
+    assert while_statement.children[4].kind == N_STATEMENT

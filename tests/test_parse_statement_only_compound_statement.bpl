@@ -1,1 +1,1 @@
-{x; y; z;}
+{x; y; z; while(e) {s; t;}}

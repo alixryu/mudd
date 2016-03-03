@@ -20,15 +20,21 @@ class ParseTree():
 
 def program(scanner):
     parse_tree = ParseTree(N_PROGRAM)
+
+    # N_STATEMENT
     parse_tree.children.append(statement(scanner))
+
     return parse_tree
 
 
 def statement(scanner):
     parse_tree = ParseTree(N_STATEMENT)
+
     token = scanner.next_token
     if token.kind == T_LCURLY:
         parse_tree.children.append(compound_stmt(scanner))
+    elif token.kind == T_WHILE:
+        parse_tree.children.append(while_stmt(scanner))
     else:
         parse_tree.children.append(expression_stmt(scanner))
     return parse_tree
@@ -37,50 +43,39 @@ def statement(scanner):
 def expression_stmt(scanner):
     parse_tree = ParseTree(N_EXPRESSION_STMT)
 
-    token = scanner.next_token
-    if token.kind == T_SEMICOL:
-        parse_tree.children.append(token)
+    if scanner.next_token.kind == T_SEMICOL:
+        parse_tree.children.append(scanner.next_token)
     else:
+        # N_EXPRESSION
         parse_tree.children.append(expression(scanner))
-
         scanner.get_next_token()
-        token = scanner.next_token
-        if token.kind == T_SEMICOL:
-            parse_tree.children.append(token)
-        else:
-            raise ParseError
+
+        # T_SEMICOL
+        parse_tree.children.append(
+            is_token_kind(T_SEMICOL, scanner.next_token)
+            )
+
     return parse_tree
 
 
 def expression(scanner):
     parse_tree = ParseTree(N_EXPRESSION)
-    token = scanner.next_token
-    if token.kind == T_ID:
-        parse_tree.children.append(token)
-    else:
-        raise ParseError
+
+    # T_ID
+    parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
+
     return parse_tree
 
 
 def compound_stmt(scanner):
     parse_tree = ParseTree(N_COMPOUND_STMT)
 
-    token = scanner.next_token
     # T_LCURLY
-    if token.kind == T_LCURLY:
-        parse_tree.children.append(token)
-    else:
-        raise ParseError
-
+    parse_tree.children.append(is_token_kind(T_LCURLY, scanner.next_token))
     # N_STATEMENT_LIST
     parse_tree.children.append(statement_list(scanner))
-
-    token = scanner.next_token
     # T_RCURLY
-    if token.kind == T_RCURLY:
-        parse_tree.children.append(token)
-    else:
-        raise ParseError
+    parse_tree.children.append(is_token_kind(T_RCURLY, scanner.next_token))
 
     return parse_tree
 
@@ -88,7 +83,7 @@ def compound_stmt(scanner):
 def statement_list(scanner):
     parse_tree = ParseTree(N_STATEMENT_LIST)
     scanner.get_next_token()
-    while not is_end_of_statement_list(scanner.next_token):
+    while not _is_end_of_statement_list(scanner.next_token):
         parse_tree.children.append(statement(scanner))
         parse_tree_top = ParseTree(N_STATEMENT_LIST)
         parse_tree_top.children.append(parse_tree)
@@ -97,9 +92,37 @@ def statement_list(scanner):
     return parse_tree
 
 
-def is_end_of_statement_list(token):
+def _is_end_of_statement_list(token):
     end_of_statement_list_tokens = [T_RCURLY]
     return token.kind in end_of_statement_list_tokens
+
+
+def while_stmt(scanner):
+    parse_tree = ParseTree(N_WHILE_STMT)
+
+    # T_WHILE
+    parse_tree.children.append(is_token_kind(T_WHILE, scanner.next_token))
+    scanner.get_next_token()
+    # T_LPAREN
+    parse_tree.children.append(is_token_kind(T_LPAREN, scanner.next_token))
+    scanner.get_next_token()
+    # N_EXPRESSION
+    parse_tree.children.append(expression(scanner))
+    scanner.get_next_token()
+    # T_RPAREN
+    parse_tree.children.append(is_token_kind(T_RPAREN, scanner.next_token))
+    scanner.get_next_token()
+    # N_STATEMENT
+    parse_tree.children.append(statement(scanner))
+
+    return parse_tree
+
+
+def is_token_kind(token_kind, token):
+    if token.kind == token_kind:
+        return token
+    else:
+        raise ParseError
 
 
 class MuddParser():
