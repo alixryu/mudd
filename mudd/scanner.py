@@ -75,8 +75,8 @@ class Token():
         self.value = value
         self.line_number = line_number
 
-    def __repr__(self):
-        return 'Kind: %s\tValue: %s\t\tLine: %s' % (
+    def __str__(self, level=0):
+        return '  '*level+'Kind: %s\tValue: %s\t\tLine: %s\n' % (
             str(self.kind), str(self.value), str(self.line_number)
             )
 
