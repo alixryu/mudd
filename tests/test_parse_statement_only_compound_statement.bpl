@@ -1,6 +1,10 @@
 {
+    writeln();
+    write(b);
+
     return x;
     return;
+
     if(k) {
         o;
         w;
