@@ -62,7 +62,7 @@ def test_parse_while_statement():
     assert while_statement.children[2].kind == N_EXPRESSION
     assert while_statement.children[3].kind == T_RPAREN
     assert while_statement.children[4].kind == N_STATEMENT
-    print(while_statement_list.children[1])
+    # print(while_statement_list.children[1])
 
 
 def test_parse_if_statement():
@@ -88,5 +88,26 @@ def test_parse_if_statement():
     assert if_else_statement.children[4].kind == N_STATEMENT
     assert if_else_statement.children[5].kind == T_ELSE
     assert if_else_statement.children[6].kind == N_STATEMENT
-    print(if_statement_list.children[1])
-    print(if_else_statement_list.children[1])
+    # print(if_statement_list.children[1])
+    # print(if_else_statement_list.children[1])
+
+
+def test_parse_return_statement():
+    parser = MuddParser(
+        'tests/test_parse_statement_only_compound_statement.bpl'
+        )
+    tree = parser.parse()
+    statement_list = tree.children[0].children[0].children[1]
+    while_statement_list = statement_list.children[0].children[0].children[0]
+    if_statement_list = while_statement_list.children[0].children[0]
+    return_statement_list = if_statement_list.children[0]
+    return_statement = return_statement_list.children[1].children[0]
+    assert return_statement.children[0].kind == T_RETURN
+    assert return_statement.children[1].kind == T_SEMICOL
+    return_statement_list2 = if_statement_list.children[0].children[0]
+    return_statement2 = return_statement_list2.children[1].children[0]
+    assert return_statement2.children[0].kind == T_RETURN
+    assert return_statement2.children[1].kind == N_EXPRESSION
+    assert return_statement2.children[2].kind == T_SEMICOL
+    # print(return_statement_list.children[1])
+    # print(return_statement_list2.children[1])

@@ -1,4 +1,6 @@
 {
+    return x;
+    return;
     if(k) {
         o;
         w;

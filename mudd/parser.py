@@ -37,6 +37,8 @@ def statement(scanner):
         parse_tree.children.append(if_stmt(scanner))
     elif token.kind == T_WHILE:
         parse_tree.children.append(while_stmt(scanner))
+    elif token.kind == T_RETURN:
+        parse_tree.children.append(return_stmt(scanner))
     else:
         parse_tree.children.append(expression_stmt(scanner))
     return parse_tree
@@ -149,6 +151,32 @@ def if_stmt(scanner):
         scanner.get_next_token()
         # N_STATEMENT
         parse_tree.children.append(statement(scanner))
+
+    return parse_tree
+
+
+def return_stmt(scanner):
+    parse_tree = ParseTree(N_RETURN_STMT)
+
+    # T_RETURN
+    parse_tree.children.append(is_token_kind(T_RETURN, scanner.next_token))
+    scanner.get_next_token()
+
+    if scanner.next_token.kind == T_SEMICOL:
+        # T_SEMICOL
+        parse_tree.children.append(
+            is_token_kind(T_SEMICOL, scanner.next_token)
+            )
+    else:
+        # N_EXPRESSION
+        parse_tree.children.append(expression(scanner))
+        scanner.get_next_token()
+        # T_SEMICOL
+        parse_tree.children.append(
+            is_token_kind(T_SEMICOL, scanner.next_token)
+            )
+
+    scanner.get_next_token()
 
     return parse_tree
 
