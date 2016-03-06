@@ -33,6 +33,8 @@ def statement(scanner):
     token = scanner.next_token
     if token.kind == T_LCURLY:
         parse_tree.children.append(compound_stmt(scanner))
+    elif token.kind == T_IF:
+        parse_tree.children.append(if_stmt(scanner))
     elif token.kind == T_WHILE:
         parse_tree.children.append(while_stmt(scanner))
     else:
@@ -55,6 +57,8 @@ def expression_stmt(scanner):
             is_token_kind(T_SEMICOL, scanner.next_token)
             )
 
+    scanner.get_next_token()
+
     return parse_tree
 
 
@@ -76,6 +80,7 @@ def compound_stmt(scanner):
     parse_tree.children.append(statement_list(scanner))
     # T_RCURLY
     parse_tree.children.append(is_token_kind(T_RCURLY, scanner.next_token))
+    scanner.get_next_token()
 
     return parse_tree
 
@@ -84,11 +89,11 @@ def statement_list(scanner):
     parse_tree = ParseTree(N_STATEMENT_LIST)
     scanner.get_next_token()
     while not _is_end_of_statement_list(scanner.next_token):
-        parse_tree.children.append(statement(scanner))
         parse_tree_top = ParseTree(N_STATEMENT_LIST)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
-        scanner.get_next_token()
+        parse_tree.children.append(statement(scanner))
+
     return parse_tree
 
 
@@ -114,6 +119,36 @@ def while_stmt(scanner):
     scanner.get_next_token()
     # N_STATEMENT
     parse_tree.children.append(statement(scanner))
+    # scanner.get_next_token()
+
+    return parse_tree
+
+
+def if_stmt(scanner):
+    parse_tree = ParseTree(N_IF_STMT)
+
+    # T_IF
+    parse_tree.children.append(is_token_kind(T_IF, scanner.next_token))
+    scanner.get_next_token()
+    # T_LPAREN
+    parse_tree.children.append(is_token_kind(T_LPAREN, scanner.next_token))
+    scanner.get_next_token()
+    # N_EXPRESSION
+    parse_tree.children.append(expression(scanner))
+    scanner.get_next_token()
+    # T_RPAREN
+    parse_tree.children.append(is_token_kind(T_RPAREN, scanner.next_token))
+    scanner.get_next_token()
+    # N_STATEMENT
+    parse_tree.children.append(statement(scanner))
+    # scanner.get_next_token()
+
+    # T_ELSE
+    if scanner.next_token.kind == T_ELSE:
+        parse_tree.children.append(scanner.next_token)
+        scanner.get_next_token()
+        # N_STATEMENT
+        parse_tree.children.append(statement(scanner))
 
     return parse_tree
 

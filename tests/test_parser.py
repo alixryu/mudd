@@ -37,14 +37,13 @@ def test_parse_statement_only_compound_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    print(tree)
     assert tree is not None
     assert tree.kind == N_PROGRAM
     assert tree.children[0].kind == N_STATEMENT
     assert tree.children[0].children[0].kind == N_COMPOUND_STMT
     assert tree.children[0].children[0].children[0].kind == T_LCURLY
     assert tree.children[0].children[0].children[-1].kind == T_RCURLY
-    statement_list = tree.children[0].children[0].children[1].children[0]
+    statement_list = tree.children[0].children[0].children[1]
     assert statement_list.kind == N_STATEMENT_LIST
     assert statement_list.children[0].kind == N_STATEMENT_LIST
     assert statement_list.children[1].kind == N_STATEMENT
@@ -55,20 +54,39 @@ def test_parse_while_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    print(tree)
-    assert tree is not None
-    assert tree.kind == N_PROGRAM
-    assert tree.children[0].kind == N_STATEMENT
-    assert tree.children[0].children[0].kind == N_COMPOUND_STMT
-    assert tree.children[0].children[0].children[0].kind == T_LCURLY
-    assert tree.children[0].children[0].children[-1].kind == T_RCURLY
-    statement_list = tree.children[0].children[0].children[1].children[0]
-    assert statement_list.kind == N_STATEMENT_LIST
-    assert statement_list.children[1].kind == N_STATEMENT
-    assert statement_list.children[1].children[0].kind == N_WHILE_STMT
-    while_statement = statement_list.children[1].children[0]
+    statement_list = tree.children[0].children[0].children[1]
+    while_statement_list = statement_list.children[0].children[0].children[0]
+    while_statement = while_statement_list.children[1].children[0]
     assert while_statement.children[0].kind == T_WHILE
     assert while_statement.children[1].kind == T_LPAREN
     assert while_statement.children[2].kind == N_EXPRESSION
     assert while_statement.children[3].kind == T_RPAREN
     assert while_statement.children[4].kind == N_STATEMENT
+    print(while_statement_list.children[1])
+
+
+def test_parse_if_statement():
+    parser = MuddParser(
+        'tests/test_parse_statement_only_compound_statement.bpl'
+        )
+    tree = parser.parse()
+    statement_list = tree.children[0].children[0].children[1]
+    while_statement_list = statement_list.children[0].children[0].children[0]
+    if_statement_list = while_statement_list.children[0].children[0]
+    if_statement = if_statement_list.children[1].children[0]
+    assert if_statement.children[0].kind == T_IF
+    assert if_statement.children[1].kind == T_LPAREN
+    assert if_statement.children[2].kind == N_EXPRESSION
+    assert if_statement.children[3].kind == T_RPAREN
+    assert if_statement.children[4].kind == N_STATEMENT
+    if_else_statement_list = while_statement_list.children[0]
+    if_else_statement = if_else_statement_list.children[1].children[0]
+    assert if_else_statement.children[0].kind == T_IF
+    assert if_else_statement.children[1].kind == T_LPAREN
+    assert if_else_statement.children[2].kind == N_EXPRESSION
+    assert if_else_statement.children[3].kind == T_RPAREN
+    assert if_else_statement.children[4].kind == N_STATEMENT
+    assert if_else_statement.children[5].kind == T_ELSE
+    assert if_else_statement.children[6].kind == N_STATEMENT
+    print(if_statement_list.children[1])
+    print(if_else_statement_list.children[1])
