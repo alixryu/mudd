@@ -286,7 +286,9 @@ def write_stmt(scanner):
         parse_tree.children.append(is_token_kind(T_RPAREN, scanner.next_token))
         scanner.get_next_token()
         # T_SEMICOL
-        parse_tree.children.append(is_token_kind(T_SEMICOL, scanner.next_token))
+        parse_tree.children.append(
+            is_token_kind(T_SEMICOL, scanner.next_token)
+            )
         scanner.get_next_token()
 
     else:
@@ -302,7 +304,9 @@ def write_stmt(scanner):
         parse_tree.children.append(is_token_kind(T_RPAREN, scanner.next_token))
         scanner.get_next_token()
         # T_SEMICOL
-        parse_tree.children.append(is_token_kind(T_SEMICOL, scanner.next_token))
+        parse_tree.children.append(
+            is_token_kind(T_SEMICOL, scanner.next_token)
+            )
         scanner.get_next_token()
 
     return parse_tree
