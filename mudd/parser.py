@@ -7,8 +7,9 @@ class ParseTree():
     """Parse Tree Node.
 
     """
-    def __init__(self, kind):
+    def __init__(self, kind, line_number):
         self.kind = kind
+        self.line_number = line_number
         self.children = []
 
     def __str__(self, level=0):
@@ -19,7 +20,7 @@ class ParseTree():
 
 
 def program(scanner):
-    parse_tree = ParseTree(N_PROGRAM)
+    parse_tree = ParseTree(N_PROGRAM, MuddScanner.line_number)
 
     # N_STATEMENT
     parse_tree.children.append(statement(scanner))
@@ -28,7 +29,7 @@ def program(scanner):
 
 
 def statement(scanner):
-    parse_tree = ParseTree(N_STATEMENT)
+    parse_tree = ParseTree(N_STATEMENT, MuddScanner.line_number)
 
     token = scanner.next_token
     if token.kind == T_LCURLY:
@@ -47,7 +48,7 @@ def statement(scanner):
 
 
 def expression_stmt(scanner):
-    parse_tree = ParseTree(N_EXPRESSION_STMT)
+    parse_tree = ParseTree(N_EXPRESSION_STMT, MuddScanner.line_number)
 
     if scanner.next_token.kind == T_SEMICOL:
         parse_tree.children.append(scanner.next_token)
@@ -67,7 +68,7 @@ def expression_stmt(scanner):
 
 
 def expression(scanner):
-    parse_tree = ParseTree(N_EXPRESSION)
+    parse_tree = ParseTree(N_EXPRESSION, MuddScanner.line_number)
 
     # T_ID
     parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
@@ -76,7 +77,7 @@ def expression(scanner):
 
 
 def compound_stmt(scanner):
-    parse_tree = ParseTree(N_COMPOUND_STMT)
+    parse_tree = ParseTree(N_COMPOUND_STMT, MuddScanner.line_number)
 
     # T_LCURLY
     parse_tree.children.append(is_token_kind(T_LCURLY, scanner.next_token))
@@ -90,10 +91,10 @@ def compound_stmt(scanner):
 
 
 def statement_list(scanner):
-    parse_tree = ParseTree(N_STATEMENT_LIST)
+    parse_tree = ParseTree(N_STATEMENT_LIST, MuddScanner.line_number)
     scanner.get_next_token()
     while not _is_end_of_statement_list(scanner.next_token):
-        parse_tree_top = ParseTree(N_STATEMENT_LIST)
+        parse_tree_top = ParseTree(N_STATEMENT_LIST, MuddScanner.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         parse_tree.children.append(statement(scanner))
@@ -107,7 +108,7 @@ def _is_end_of_statement_list(token):
 
 
 def while_stmt(scanner):
-    parse_tree = ParseTree(N_WHILE_STMT)
+    parse_tree = ParseTree(N_WHILE_STMT, MuddScanner.line_number)
 
     # T_WHILE
     parse_tree.children.append(is_token_kind(T_WHILE, scanner.next_token))
@@ -129,7 +130,7 @@ def while_stmt(scanner):
 
 
 def if_stmt(scanner):
-    parse_tree = ParseTree(N_IF_STMT)
+    parse_tree = ParseTree(N_IF_STMT, MuddScanner.line_number)
 
     # T_IF
     parse_tree.children.append(is_token_kind(T_IF, scanner.next_token))
@@ -158,7 +159,7 @@ def if_stmt(scanner):
 
 
 def return_stmt(scanner):
-    parse_tree = ParseTree(N_RETURN_STMT)
+    parse_tree = ParseTree(N_RETURN_STMT, MuddScanner.line_number)
 
     # T_RETURN
     parse_tree.children.append(is_token_kind(T_RETURN, scanner.next_token))
@@ -184,7 +185,7 @@ def return_stmt(scanner):
 
 
 def write_stmt(scanner):
-    parse_tree = ParseTree(N_RETURN_STMT)
+    parse_tree = ParseTree(N_RETURN_STMT, MuddScanner.line_number)
 
     if scanner.next_token.kind == T_WRITE:
         # T_WRITE
@@ -236,6 +237,7 @@ class MuddParser():
     def __init__(self, filename):
         self.scanner = MuddScanner(filename)
         self.parse_tree = None
+        MuddScanner.line_number = 1
 
     def parse(self):
         self.scanner.get_next_token()

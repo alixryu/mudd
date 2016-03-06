@@ -14,7 +14,7 @@ def test_parse_tree_constructor():
     parser = MuddParser('factorial.bpl')
     parser.scanner.get_next_token()
     token = parser.scanner.next_token
-    parse_tree = ParseTree(token)
+    parse_tree = ParseTree(token, 1)
     assert 'children' in parse_tree.__dict__.keys()
     assert 'kind' in parse_tree.__dict__.keys()
 
