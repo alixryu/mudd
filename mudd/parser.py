@@ -22,8 +22,49 @@ class ParseTree():
 def program(scanner):
     parse_tree = ParseTree(N_PROGRAM, MuddScanner.line_number)
 
-    # N_STATEMENT
-    parse_tree.children.append(statement(scanner))
+    # N_DECLARATION_LIST
+    parse_tree.children.append(declaration_list(scanner))
+
+    return parse_tree
+
+
+def declaration_list(scanner):
+    parse_tree = ParseTree(N_DECLARATION_LIST, MuddScanner.line_number)
+
+    # N_DECLARATION (minimum 1 declaration required)
+    parse_tree.children.append(declaration(scanner))
+    while not _is_end_of_declaration_list(scanner.next_token):
+        parse_tree_top = ParseTree(N_DECLARATION_LIST, MuddScanner.line_number)
+        parse_tree_top.children.append(parse_tree)
+        parse_tree = parse_tree_top
+        parse_tree.children.append(declaration(scanner))
+
+    return parse_tree
+
+
+def _is_end_of_declaration_list(token):
+    end_of_declaration_list_tokens = [T_EOF]
+    return token.kind in end_of_declaration_list_tokens
+
+
+def declaration(scanner):
+    parse_tree = ParseTree(N_DECLARATION, MuddScanner.line_number)
+
+    # N_VAR_DEC
+    parse_tree.children.append(var_dec(scanner))
+
+    return parse_tree
+
+
+def var_dec(scanner):
+    parse_tree = ParseTree(N_VAR_DEC, MuddScanner.line_number)
+
+    # T_ID
+    parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
+    scanner.get_next_token()
+    # T_SEMICOL
+    parse_tree.children.append(is_token_kind(T_SEMICOL, scanner.next_token))
+    scanner.get_next_token()
 
     return parse_tree
 

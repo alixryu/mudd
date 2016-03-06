@@ -137,3 +137,15 @@ def test_parse_write_statement():
     assert writeln_statement.children[3].kind == T_SEMICOL
     print(write_statement_list.children[1])
     print(writeln_statement_list.children[1])
+
+
+def test_parse_declaration():
+    parser = MuddParser(
+        'tests/test_parse_variable_declaration.bpl'
+        )
+    tree = parser.parse()
+    assert tree.kind == N_PROGRAM
+    assert tree.children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[1].kind == N_DECLARATION
+    print(tree)
