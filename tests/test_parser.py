@@ -149,3 +149,36 @@ def test_parse_declaration():
     assert tree.children[0].children[0].kind == N_DECLARATION_LIST
     assert tree.children[0].children[1].kind == N_DECLARATION
     print(tree)
+
+
+def test_parse_var_dec():
+    parser = MuddParser(
+        'tests/test_parse_variable_declaration.bpl'
+        )
+    tree = parser.parse()
+    assert tree.kind == N_PROGRAM
+    assert tree.children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[1].kind == N_DECLARATION
+    declaration1 = tree.children[0].children[1]
+    assert declaration1.children[0].kind == N_VAR_DEC
+    assert declaration1.children[0].children[0].kind == N_TYPE_SPECIFIER
+    assert declaration1.children[0].children[1].kind == T_ID
+    assert declaration1.children[0].children[2].kind == T_SEMICOL
+    declaration2 = tree.children[0].children[0].children[1]
+    assert declaration2.children[0].kind == N_VAR_DEC
+    assert declaration2.children[0].children[0].kind == N_TYPE_SPECIFIER
+    assert declaration2.children[0].children[1].kind == T_MUL
+    assert declaration2.children[0].children[2].kind == T_ID
+    assert declaration2.children[0].children[3].kind == T_SEMICOL
+    declaration3 = tree.children[0].children[0].children[0].children[0]
+    assert declaration3.children[0].kind == N_VAR_DEC
+    assert declaration3.children[0].children[0].kind == N_TYPE_SPECIFIER
+    assert declaration3.children[0].children[1].kind == T_ID
+    assert declaration3.children[0].children[2].kind == T_LBRACK
+    assert declaration3.children[0].children[3].kind == T_NUM
+    assert declaration3.children[0].children[4].kind == T_RBRACK
+    assert declaration3.children[0].children[5].kind == T_SEMICOL
+    print(declaration1)
+    print(declaration2)
+    print(declaration3)

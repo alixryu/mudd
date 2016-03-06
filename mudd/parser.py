@@ -59,11 +59,55 @@ def declaration(scanner):
 def var_dec(scanner):
     parse_tree = ParseTree(N_VAR_DEC, MuddScanner.line_number)
 
-    # T_ID
-    parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
-    scanner.get_next_token()
+    # N_TYPE_SPECIFIER
+    parse_tree.children.append(type_specifier(scanner))
+
+    if scanner.next_token.kind == T_MUL:
+        # T_MUL (pointer)
+        parse_tree.children.append(is_token_kind(T_MUL, scanner.next_token))
+        scanner.get_next_token()
+        # T_ID
+        parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
+        scanner.get_next_token()
+    else:
+        # T_ID
+        parse_tree.children.append(is_token_kind(T_ID, scanner.next_token))
+        scanner.get_next_token()
+        if scanner.next_token.kind == T_LBRACK:
+            # T_LBRACK
+            parse_tree.children.append(
+                is_token_kind(T_LBRACK, scanner.next_token)
+                )
+            scanner.get_next_token()
+            # T_NUM
+            parse_tree.children.append(
+                is_token_kind(T_NUM, scanner.next_token)
+                )
+            scanner.get_next_token()
+            # T_RBRACK
+            parse_tree.children.append(
+                is_token_kind(T_RBRACK, scanner.next_token)
+                )
+            scanner.get_next_token()
+    # TODO: if no T_SEMICOL at the end of all var_dec, shift tab for this chunk
     # T_SEMICOL
-    parse_tree.children.append(is_token_kind(T_SEMICOL, scanner.next_token))
+    parse_tree.children.append(
+        is_token_kind(T_SEMICOL, scanner.next_token)
+        )
+    scanner.get_next_token()
+
+    return parse_tree
+
+
+def type_specifier(scanner):
+    parse_tree = ParseTree(N_TYPE_SPECIFIER, MuddScanner.line_number)
+
+    if scanner.next_token.kind == T_INT:
+        parse_tree.children.append(is_token_kind(T_INT, scanner.next_token))
+    elif scanner.next_token.kind == T_VOID:
+        parse_tree.children.append(is_token_kind(T_VOID, scanner.next_token))
+    else:
+        parse_tree.children.append(is_token_kind(T_STRING, scanner.next_token))
     scanner.get_next_token()
 
     return parse_tree
@@ -245,7 +289,7 @@ def write_stmt(scanner):
         parse_tree.children.append(is_token_kind(T_SEMICOL, scanner.next_token))
         scanner.get_next_token()
 
-    elif scanner.next_token.kind == T_WRITELN:
+    else:
         # T_WRITELN
         parse_tree.children.append(
             is_token_kind(T_WRITELN, scanner.next_token)
