@@ -182,3 +182,44 @@ def test_parse_var_dec():
     print(declaration1)
     print(declaration2)
     print(declaration3)
+
+
+def test_parse_fun_dec():
+    parser = MuddParser(
+        'tests/test_parse_function_declaration.bpl'
+        )
+    tree = parser.parse()
+    assert tree.kind == N_PROGRAM
+    assert tree.children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[1].kind == N_DECLARATION
+    declaration1 = tree.children[0].children[1]
+    assert declaration1.children[0].kind == N_FUN_DEC
+    assert declaration1.children[0].children[0].kind == N_TYPE_SPECIFIER
+    assert declaration1.children[0].children[1].kind == T_ID
+    assert declaration1.children[0].children[2].kind == T_LPAREN
+    assert declaration1.children[0].children[3].kind == N_PARAMS
+    assert declaration1.children[0].children[4].kind == T_RPAREN
+    assert declaration1.children[0].children[5].kind == N_COMPOUND_STMT
+    void_params = declaration1.children[0].children[3]
+    assert void_params.children[0].kind == T_VOID
+    declaration2 = tree.children[0].children[0].children[0]
+    param_list_params = declaration2.children[0].children[3]
+    assert param_list_params.children[0].kind == N_PARAM_LIST
+    array_param = param_list_params.children[0].children[2]
+    assert array_param.children[0].kind == N_TYPE_SPECIFIER
+    assert array_param.children[1].kind == T_ID
+    assert array_param.children[2].kind == T_LBRACK
+    assert array_param.children[3].kind == T_RBRACK
+    pointer_param = param_list_params.children[0].children[0].children[2]
+    assert pointer_param.children[0].kind == N_TYPE_SPECIFIER
+    assert pointer_param.children[1].kind == T_MUL
+    assert pointer_param.children[2].kind == T_ID
+    id_param = param_list_params.children[
+        0].children[0].children[0].children[0]
+    assert id_param.children[0].kind == N_TYPE_SPECIFIER
+    assert id_param.children[1].kind == T_ID
+    print(void_params)
+    print(array_param)
+    print(pointer_param)
+    print(id_param)
