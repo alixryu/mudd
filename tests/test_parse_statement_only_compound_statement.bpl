@@ -1,4 +1,4 @@
-{
+int blank(void) {
     writeln();
     write(b);
 
@@ -19,7 +19,5 @@
         s;
         t;
     }
-
-    x; y; z;
 
 }
