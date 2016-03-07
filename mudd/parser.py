@@ -89,7 +89,7 @@ def var_fun_dec(scanner):
                 is_token_kind(scanner.next_token, T_RBRACK)
                 )
             scanner.get_next_token()
-        else:
+        elif scanner.next_token.kind == T_LPAREN:
             parse_tree.kind = N_FUN_DEC
             # T_LPAREN
             parse_tree.children.append(

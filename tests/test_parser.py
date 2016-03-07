@@ -19,17 +19,22 @@ def test_parse_tree_constructor():
     assert 'kind' in parse_tree.__dict__.keys()
 
 
-def test_parse_single_id_statement():
+def test_parse_single_id_expression():
     parser = MuddParser('tests/test_parse_single_id_statement.bpl')
-    # test reaching accpet by T_EOF
     tree = parser.parse()
-    assert tree is not None
     assert tree.kind == N_PROGRAM
-    assert tree.children[0].kind == N_STATEMENT
-    assert tree.children[0].children[0].kind == N_EXPRESSION_STMT
-    assert tree.children[0].children[0].children[0].kind == N_EXPRESSION
-    assert tree.children[0].children[0].children[0].children[0].kind == T_ID
-    assert tree.children[0].children[0].children[1].kind == T_SEMICOL
+    assert tree.children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[0].kind == N_DECLARATION
+    assert tree.children[0].children[0].children[0].kind == N_FUN_DEC
+    fun_dec = tree.children[0].children[0].children[0]
+    assert fun_dec.children[5].kind == N_COMPOUND_STMT
+    assert fun_dec.children[5].children[1].kind == N_STATEMENT_LIST
+    assert fun_dec.children[5].children[1].children[1].kind == N_STATEMENT
+    statement = fun_dec.children[5].children[1].children[1]
+    assert statement.children[0].kind == N_EXPRESSION_STMT
+    assert statement.children[0].children[0].kind == N_EXPRESSION
+    assert statement.children[0].children[0].children[0].kind == T_ID
+    assert statement.children[0].children[1].kind == T_SEMICOL
 
 
 def test_parse_statement_only_compound_statement():
@@ -37,16 +42,19 @@ def test_parse_statement_only_compound_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    assert tree is not None
+
     assert tree.kind == N_PROGRAM
-    assert tree.children[0].kind == N_STATEMENT
-    assert tree.children[0].children[0].kind == N_COMPOUND_STMT
-    assert tree.children[0].children[0].children[0].kind == T_LCURLY
-    assert tree.children[0].children[0].children[-1].kind == T_RCURLY
-    statement_list = tree.children[0].children[0].children[1]
-    assert statement_list.kind == N_STATEMENT_LIST
-    assert statement_list.children[0].kind == N_STATEMENT_LIST
-    assert statement_list.children[1].kind == N_STATEMENT
+    assert tree.children[0].kind == N_DECLARATION_LIST
+    assert tree.children[0].children[0].kind == N_DECLARATION
+    assert tree.children[0].children[0].children[0].kind == N_FUN_DEC
+    fun_dec = tree.children[0].children[0].children[0]
+    assert fun_dec.children[5].kind == N_COMPOUND_STMT
+    compound_stmt = fun_dec.children[5]
+    assert compound_stmt.children[0].kind == T_LCURLY
+    assert compound_stmt.children[1].kind == N_STATEMENT_LIST
+    assert compound_stmt.children[1].children[0].kind == N_STATEMENT_LIST
+    assert compound_stmt.children[1].children[1].kind == N_STATEMENT
+    assert compound_stmt.children[2].kind == T_RCURLY
 
 
 def test_parse_while_statement():
@@ -54,15 +62,14 @@ def test_parse_while_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    statement_list = tree.children[0].children[0].children[1]
-    while_statement_list = statement_list.children[0].children[0].children[0]
-    while_statement = while_statement_list.children[1].children[0]
+    compound_stmt = tree.children[0].children[0].children[0].children[5]
+    while_statement = compound_stmt.children[1].children[1].children[0]
     assert while_statement.children[0].kind == T_WHILE
     assert while_statement.children[1].kind == T_LPAREN
     assert while_statement.children[2].kind == N_EXPRESSION
     assert while_statement.children[3].kind == T_RPAREN
     assert while_statement.children[4].kind == N_STATEMENT
-    print(while_statement_list.children[1])
+    print(while_statement)
 
 
 def test_parse_if_statement():
@@ -70,17 +77,16 @@ def test_parse_if_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    statement_list = tree.children[0].children[0].children[1]
-    while_statement_list = statement_list.children[0].children[0].children[0]
-    if_statement_list = while_statement_list.children[0].children[0]
-    if_statement = if_statement_list.children[1].children[0]
+    compound_stmt = tree.children[0].children[0].children[0].children[5]
+    if_statement = compound_stmt.children[
+        1].children[0].children[0].children[1].children[0]
     assert if_statement.children[0].kind == T_IF
     assert if_statement.children[1].kind == T_LPAREN
     assert if_statement.children[2].kind == N_EXPRESSION
     assert if_statement.children[3].kind == T_RPAREN
     assert if_statement.children[4].kind == N_STATEMENT
-    if_else_statement_list = while_statement_list.children[0]
-    if_else_statement = if_else_statement_list.children[1].children[0]
+    if_else_statement = compound_stmt.children[
+        1].children[0].children[1].children[0]
     assert if_else_statement.children[0].kind == T_IF
     assert if_else_statement.children[1].kind == T_LPAREN
     assert if_else_statement.children[2].kind == N_EXPRESSION
@@ -88,8 +94,8 @@ def test_parse_if_statement():
     assert if_else_statement.children[4].kind == N_STATEMENT
     assert if_else_statement.children[5].kind == T_ELSE
     assert if_else_statement.children[6].kind == N_STATEMENT
-    print(if_statement_list.children[1])
-    print(if_else_statement_list.children[1])
+    print(if_statement)
+    print(if_else_statement)
 
 
 def test_parse_return_statement():
@@ -97,20 +103,19 @@ def test_parse_return_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    statement_list = tree.children[0].children[0].children[1]
-    while_statement_list = statement_list.children[0].children[0].children[0]
-    if_statement_list = while_statement_list.children[0].children[0]
-    return_statement_list = if_statement_list.children[0]
-    return_statement = return_statement_list.children[1].children[0]
+    compound_stmt = tree.children[0].children[0].children[0].children[5]
+    return_statement = compound_stmt.children[
+        1].children[0].children[0].children[0].children[1].children[0]
     assert return_statement.children[0].kind == T_RETURN
     assert return_statement.children[1].kind == T_SEMICOL
-    return_statement_list2 = if_statement_list.children[0].children[0]
-    return_statement2 = return_statement_list2.children[1].children[0]
+    return_statement2 = compound_stmt.children[
+        1].children[0].children[0].children[0].children[
+            0].children[1].children[0]
     assert return_statement2.children[0].kind == T_RETURN
     assert return_statement2.children[1].kind == N_EXPRESSION
     assert return_statement2.children[2].kind == T_SEMICOL
-    print(return_statement_list.children[1])
-    print(return_statement_list2.children[1])
+    print(return_statement)
+    print(return_statement2)
 
 
 def test_parse_write_statement():
@@ -118,25 +123,24 @@ def test_parse_write_statement():
         'tests/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
-    statement_list = tree.children[0].children[0].children[1]
-    while_statement_list = statement_list.children[0].children[0].children[0]
-    if_statement_list = while_statement_list.children[0].children[0]
-    return_statement_list2 = if_statement_list.children[0].children[0]
-    write_statement_list = return_statement_list2.children[0]
-    write_statement = write_statement_list.children[1].children[0]
+    compound_stmt = tree.children[0].children[0].children[0].children[5]
+    write_statement = compound_stmt.children[
+        1].children[0].children[0].children[0].children[
+            0].children[0].children[1].children[0]
     assert write_statement.children[0].kind == T_WRITE
     assert write_statement.children[1].kind == T_LPAREN
     assert write_statement.children[2].kind == N_EXPRESSION
     assert write_statement.children[3].kind == T_RPAREN
     assert write_statement.children[4].kind == T_SEMICOL
-    writeln_statement_list = return_statement_list2.children[0].children[0]
-    writeln_statement = writeln_statement_list.children[1].children[0]
+    writeln_statement = compound_stmt.children[
+        1].children[0].children[0].children[0].children[
+            0].children[0].children[0].children[1].children[0]
     assert writeln_statement.children[0].kind == T_WRITELN
     assert writeln_statement.children[1].kind == T_LPAREN
     assert writeln_statement.children[2].kind == T_RPAREN
     assert writeln_statement.children[3].kind == T_SEMICOL
-    print(write_statement_list.children[1])
-    print(writeln_statement_list.children[1])
+    print(write_statement)
+    print(writeln_statement)
 
 
 def test_parse_declaration():
