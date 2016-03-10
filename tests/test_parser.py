@@ -52,10 +52,11 @@ def test_parse_statement_only_compound_statement():
     assert fun_dec.children[5].kind == N_COMPOUND_STMT
     compound_stmt = fun_dec.children[5]
     assert compound_stmt.children[0].kind == T_LCURLY
-    assert compound_stmt.children[1].kind == N_STATEMENT_LIST
-    assert compound_stmt.children[1].children[0].kind == N_STATEMENT_LIST
-    assert compound_stmt.children[1].children[1].kind == N_STATEMENT
-    assert compound_stmt.children[2].kind == T_RCURLY
+    assert compound_stmt.children[1].kind == N_LOCAL_DECS
+    assert compound_stmt.children[2].kind == N_STATEMENT_LIST
+    assert compound_stmt.children[2].children[0].kind == N_STATEMENT_LIST
+    assert compound_stmt.children[2].children[1].kind == N_STATEMENT
+    assert compound_stmt.children[3].kind == T_RCURLY
 
 
 def test_parse_while_statement():
@@ -64,7 +65,7 @@ def test_parse_while_statement():
         )
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
-    while_statement = compound_stmt.children[1].children[1].children[0]
+    while_statement = compound_stmt.children[2].children[1].children[0]
     assert while_statement.children[0].kind == T_WHILE
     assert while_statement.children[1].kind == T_LPAREN
     assert while_statement.children[2].kind == N_EXPRESSION
@@ -80,14 +81,14 @@ def test_parse_if_statement():
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
     if_statement = compound_stmt.children[
-        1].children[0].children[0].children[1].children[0]
+        2].children[0].children[0].children[1].children[0]
     assert if_statement.children[0].kind == T_IF
     assert if_statement.children[1].kind == T_LPAREN
     assert if_statement.children[2].kind == N_EXPRESSION
     assert if_statement.children[3].kind == T_RPAREN
     assert if_statement.children[4].kind == N_STATEMENT
     if_else_statement = compound_stmt.children[
-        1].children[0].children[1].children[0]
+        2].children[0].children[1].children[0]
     assert if_else_statement.children[0].kind == T_IF
     assert if_else_statement.children[1].kind == T_LPAREN
     assert if_else_statement.children[2].kind == N_EXPRESSION
@@ -106,11 +107,11 @@ def test_parse_return_statement():
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
     return_statement = compound_stmt.children[
-        1].children[0].children[0].children[0].children[1].children[0]
+        2].children[0].children[0].children[0].children[1].children[0]
     assert return_statement.children[0].kind == T_RETURN
     assert return_statement.children[1].kind == T_SEMICOL
     return_statement2 = compound_stmt.children[
-        1].children[0].children[0].children[0].children[
+        2].children[0].children[0].children[0].children[
             0].children[1].children[0]
     assert return_statement2.children[0].kind == T_RETURN
     assert return_statement2.children[1].kind == N_EXPRESSION
@@ -126,7 +127,7 @@ def test_parse_write_statement():
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
     write_statement = compound_stmt.children[
-        1].children[0].children[0].children[0].children[
+        2].children[0].children[0].children[0].children[
             0].children[0].children[1].children[0]
     assert write_statement.children[0].kind == T_WRITE
     assert write_statement.children[1].kind == T_LPAREN
@@ -134,7 +135,7 @@ def test_parse_write_statement():
     assert write_statement.children[3].kind == T_RPAREN
     assert write_statement.children[4].kind == T_SEMICOL
     writeln_statement = compound_stmt.children[
-        1].children[0].children[0].children[0].children[
+        2].children[0].children[0].children[0].children[
             0].children[0].children[0].children[1].children[0]
     assert writeln_statement.children[0].kind == T_WRITELN
     assert writeln_statement.children[1].kind == T_LPAREN
@@ -236,7 +237,7 @@ def test_parse_expression():
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
-    statement_list = fun_dec.children[5].children[1]
+    statement_list = fun_dec.children[5].children[2]
     statement1 = statement_list.children[1]
     expression1 = statement1.children[0].children[0]
     assert expression1.children[0].kind == N_VAR
@@ -268,7 +269,7 @@ def test_parse_comp_exp():
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
-    base_statement_list = fun_dec.children[5].children[1]
+    base_statement_list = fun_dec.children[5].children[2]
     statement_list = base_statement_list.children[0].children[0].children[0]
     statement = statement_list.children[1]
     expression = statement.children[0].children[0]
@@ -282,7 +283,7 @@ def test_parse_fun_call():
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
-    base_statement_list = fun_dec.children[5].children[1]
+    base_statement_list = fun_dec.children[5].children[2]
     statement_list = base_statement_list.children[
         0].children[0].children[0].children[0]
     statement = statement_list.children[1]
@@ -290,10 +291,30 @@ def test_parse_fun_call():
     comp_exp = expression.children[0]
     fun_call = comp_exp.children[
         0].children[0].children[0].children[0].children[0]
-    print(fun_call)
     assert fun_call.kind == N_FUN_CALL
     assert fun_call.children[0].kind == T_ID
     assert fun_call.children[2].kind == N_ARGS
     arg_list = fun_call.children[2].children[0]
     assert arg_list.children[2].kind == N_EXPRESSION
     assert arg_list.children[0].children[0].kind == N_EXPRESSION
+    print(fun_call)
+
+
+def test_parse_local_decs():
+    parser = MuddParser(
+        'tests/test_parse_local_decs.bpl'
+        )
+    tree = parser.parse()
+    fun_dec1 = tree.children[0].children[1].children[0]
+    assert fun_dec1.children[5].kind == N_COMPOUND_STMT
+    compound_stmt1 = fun_dec1.children[5]
+    local_decs1 = compound_stmt1.children[1]
+    assert not local_decs1.children
+    fun_dec2 = tree.children[0].children[0].children[0].children[0]
+    assert fun_dec2.children[5].kind == N_COMPOUND_STMT
+    compound_stmt2 = fun_dec2.children[5]
+    local_decs2 = compound_stmt2.children[1]
+    assert local_decs2.children[1].kind == N_VAR_DEC
+    assert local_decs2.children[0].children[1].kind == N_VAR_DEC
+    print(local_decs1)
+    print(local_decs2)

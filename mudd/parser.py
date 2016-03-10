@@ -606,6 +606,9 @@ def compound_stmt(scanner):
 
     # T_LCURLY
     parse_tree.children.append(is_token_kind(scanner.next_token, T_LCURLY))
+    scanner.get_next_token()
+    # N_LOCAL_DECS
+    parse_tree.children.append(local_decs(scanner))
     # N_STATEMENT_LIST
     parse_tree.children.append(statement_list(scanner))
     # T_RCURLY
@@ -615,9 +618,24 @@ def compound_stmt(scanner):
     return parse_tree
 
 
+def local_decs(scanner):
+    parse_tree = ParseTree(N_LOCAL_DECS, MuddScanner.line_number)
+    while not _is_end_of_local_decs(scanner.next_token):
+        parse_tree_top = ParseTree(N_LOCAL_DECS, MuddScanner.line_number)
+        parse_tree_top.children.append(parse_tree)
+        parse_tree = parse_tree_top
+        parse_tree.children.append(var_dec(scanner))
+
+    return parse_tree
+
+
+def _is_end_of_local_decs(token):
+    end_of_local_decs_tokens = [T_INT, T_VOID, T_STRING]
+    return token.kind not in end_of_local_decs_tokens
+
+
 def statement_list(scanner):
     parse_tree = ParseTree(N_STATEMENT_LIST, MuddScanner.line_number)
-    scanner.get_next_token()
     while not _is_end_of_statement_list(scanner.next_token):
         parse_tree_top = ParseTree(N_STATEMENT_LIST, MuddScanner.line_number)
         parse_tree_top.children.append(parse_tree)
