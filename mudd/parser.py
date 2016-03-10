@@ -487,13 +487,14 @@ def factor(scanner):
             )
         scanner.get_next_token()
     else:
-        # T_ID
-        parse_tree.children.append(
-            is_token_kind(scanner.next_token, T_ID)
-            )
+        scanner.set_backtrack_index()
+
+        id1 = is_token_kind(scanner.next_token, T_ID)
         scanner.get_next_token()
-        # TODO: add FUN_CALL with Backtracking
+
         if scanner.next_token.kind == T_LBRACK:
+            # T_ID
+            parse_tree.children.append(id1)
             # T_LBRACK
             parse_tree.children.append(
                 is_token_kind(scanner.next_token, T_LBRACK)
@@ -506,6 +507,61 @@ def factor(scanner):
                 is_token_kind(scanner.next_token, T_RBRACK)
                 )
             scanner.get_next_token()
+            scanner.unset_backtrack_index()
+        elif scanner.next_token.kind == T_LPAREN:
+            scanner.backtrack()
+            parse_tree.children.append(fun_call(scanner))
+
+    return parse_tree
+
+
+def fun_call(scanner):
+    parse_tree = ParseTree(N_FUN_CALL, MuddScanner.line_number)
+
+    # T_ID
+    parse_tree.children.append(
+        is_token_kind(scanner.next_token, T_ID)
+        )
+    scanner.get_next_token()
+    # T_LPAREN
+    parse_tree.children.append(is_token_kind(scanner.next_token, T_LPAREN))
+    scanner.get_next_token()
+    # N_ARGS
+    parse_tree.children.append(args(scanner))
+    # T_RPAREN
+    parse_tree.children.append(is_token_kind(scanner.next_token, T_RPAREN))
+    scanner.get_next_token()
+
+    return parse_tree
+
+
+def args(scanner):
+    parse_tree = ParseTree(N_ARGS, MuddScanner.line_number)
+
+    # N_ARG_LIST
+    if not _is_end_of_arg_list(scanner.next_token):
+        parse_tree.children.append(arg_list(scanner))
+
+    return parse_tree
+
+
+def _is_end_of_arg_list(token):
+    end_of_arg_list_tokens = [T_RPAREN]
+    return token.kind in end_of_arg_list_tokens
+
+
+def arg_list(scanner):
+    parse_tree = ParseTree(N_ARG_LIST, MuddScanner.line_number)
+
+    # N_EXPRESSION (minimum 1 expression required)
+    parse_tree.children.append(expression(scanner))
+    while not _is_end_of_arg_list(scanner.next_token):
+        parse_tree_top = ParseTree(N_ARG_LIST, MuddScanner.line_number)
+        parse_tree_top.children.append(parse_tree)
+        parse_tree = parse_tree_top
+        parse_tree.children.append(is_token_kind(scanner.next_token, T_COMMA))
+        scanner.get_next_token()
+        parse_tree.children.append(expression(scanner))
 
     return parse_tree
 

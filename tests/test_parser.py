@@ -274,3 +274,26 @@ def test_parse_comp_exp():
     expression = statement.children[0].children[0]
     comp_exp = expression.children[0]
     assert comp_exp.kind == N_COMP_EXP
+
+
+def test_parse_fun_call():
+    parser = MuddParser(
+        'tests/test_parse_expression.bpl'
+        )
+    tree = parser.parse()
+    fun_dec = tree.children[0].children[0].children[0]
+    base_statement_list = fun_dec.children[5].children[1]
+    statement_list = base_statement_list.children[
+        0].children[0].children[0].children[0]
+    statement = statement_list.children[1]
+    expression = statement.children[0].children[0]
+    comp_exp = expression.children[0]
+    fun_call = comp_exp.children[
+        0].children[0].children[0].children[0].children[0]
+    print(fun_call)
+    assert fun_call.kind == N_FUN_CALL
+    assert fun_call.children[0].kind == T_ID
+    assert fun_call.children[2].kind == N_ARGS
+    arg_list = fun_call.children[2].children[0]
+    assert arg_list.children[2].kind == N_EXPRESSION
+    assert arg_list.children[0].children[0].kind == N_EXPRESSION
