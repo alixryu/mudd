@@ -50,71 +50,106 @@ def _is_end_of_declaration_list(token):
 def declaration(scanner):
     parse_tree = ParseTree(N_DECLARATION, MuddScanner.line_number)
 
-    # N_VAR_DEC OR N_FUN_DEC
-    parse_tree.children.append(var_fun_dec(scanner))
+    scanner.set_backtrack_index()
+    # N_VAR_DEC
+    parse_tree_var_dec = var_dec(scanner, parse_error=False)
+
+    if parse_tree_var_dec:
+        parse_tree.children.append(parse_tree_var_dec)
+        scanner.unset_backtrack_index()
+    else:
+        scanner.backtrack()
+        parse_tree.children.append(fun_dec(scanner))
 
     return parse_tree
 
 
-def var_fun_dec(scanner):
-    parse_tree = ParseTree(N_VAR_DEC, MuddScanner.line_number)
-
-    # N_TYPE_SPECIFIER
-    parse_tree.children.append(type_specifier(scanner))
-
-    if scanner.next_token.kind == T_MUL:
-        # T_MUL (pointer)
-        parse_tree.children.append(is_token_kind(scanner.next_token, T_MUL))
-        scanner.get_next_token()
+def var_dec(scanner, parse_error=True):
+    parse_tree = None
+    try:
+        parse_tree = ParseTree(N_VAR_DEC, MuddScanner.line_number)
+        # N_TYPE_SPECIFIER
+        parse_tree.children.append(type_specifier(scanner))
+        is_pointer = False
+        if scanner.next_token.kind == T_MUL:
+            is_pointer = True
+            # T_MUL (pointer)
+            parse_tree.children.append(
+                is_token_kind(
+                    scanner.next_token, T_MUL, parse_error=parse_error
+                    )
+                )
+            scanner.get_next_token()
         # T_ID
-        parse_tree.children.append(is_token_kind(scanner.next_token, T_ID))
+        parse_tree.children.append(
+            is_token_kind(
+                scanner.next_token, T_ID, parse_error=parse_error
+                )
+            )
         scanner.get_next_token()
-    else:
-        # T_ID
-        parse_tree.children.append(is_token_kind(scanner.next_token, T_ID))
-        scanner.get_next_token()
-        if scanner.next_token.kind == T_LBRACK:
+
+        if scanner.next_token.kind == T_LBRACK and not is_pointer:
             # T_LBRACK
             parse_tree.children.append(
-                is_token_kind(scanner.next_token, T_LBRACK)
+                is_token_kind(
+                    scanner.next_token, T_LBRACK, parse_error=parse_error
+                    )
                 )
             scanner.get_next_token()
             # T_NUM
             parse_tree.children.append(
-                is_token_kind(scanner.next_token, T_NUM)
+                is_token_kind(
+                    scanner.next_token, T_NUM, parse_error=parse_error
+                    )
                 )
             scanner.get_next_token()
             # T_RBRACK
             parse_tree.children.append(
-                is_token_kind(scanner.next_token, T_RBRACK)
+                is_token_kind(
+                    scanner.next_token, T_RBRACK, parse_error=parse_error
+                    )
                 )
             scanner.get_next_token()
-        elif scanner.next_token.kind == T_LPAREN:
-            parse_tree.kind = N_FUN_DEC
-            # T_LPAREN
-            parse_tree.children.append(
-                is_token_kind(scanner.next_token, T_LPAREN)
-                )
-            scanner.get_next_token()
-            # N_PARAMS
-            parse_tree.children.append(
-                params(scanner)
-                )
-            # T_RPAREN
-            parse_tree.children.append(
-                is_token_kind(scanner.next_token, T_RPAREN)
-                )
-            scanner.get_next_token()
-            # N_COMPOUND_STMT
-            parse_tree.children.append(compound_stmt(scanner))
 
-    # TODO: if no T_SEMICOL at the end of all var_dec, shift tab for this chunk
-    if parse_tree.kind == N_VAR_DEC:
         # T_SEMICOL
         parse_tree.children.append(
-            is_token_kind(scanner.next_token, T_SEMICOL)
+            is_token_kind(
+                scanner.next_token, T_SEMICOL, parse_error=parse_error
+                )
             )
         scanner.get_next_token()
+
+    except BackTrackError:
+        parse_tree = None
+
+    finally:
+        return parse_tree
+
+
+def fun_dec(scanner):
+    parse_tree = ParseTree(N_FUN_DEC, MuddScanner.line_number)
+
+    # N_TYPE_SPECIFIER
+    parse_tree.children.append(type_specifier(scanner))
+    # T_ID
+    parse_tree.children.append(is_token_kind(scanner.next_token, T_ID))
+    scanner.get_next_token()
+    # T_LPAREN
+    parse_tree.children.append(
+        is_token_kind(scanner.next_token, T_LPAREN)
+        )
+    scanner.get_next_token()
+    # N_PARAMS
+    parse_tree.children.append(
+        params(scanner)
+        )
+    # T_RPAREN
+    parse_tree.children.append(
+        is_token_kind(scanner.next_token, T_RPAREN)
+        )
+    scanner.get_next_token()
+    # N_COMPOUND_STMT
+    parse_tree.children.append(compound_stmt(scanner))
 
     return parse_tree
 
