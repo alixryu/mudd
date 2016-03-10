@@ -18,7 +18,7 @@ def test_parse_tree_constructor():
     assert 'children' in parse_tree.__dict__.keys()
     assert 'kind' in parse_tree.__dict__.keys()
 
-
+'''
 def test_parse_single_id_expression():
     parser = MuddParser('tests/test_parse_single_id_statement.bpl')
     tree = parser.parse()
@@ -35,6 +35,7 @@ def test_parse_single_id_expression():
     assert statement.children[0].children[0].kind == N_EXPRESSION
     assert statement.children[0].children[0].children[0].kind == T_ID
     assert statement.children[0].children[1].kind == T_SEMICOL
+'''
 
 
 def test_parse_statement_only_compound_statement():
@@ -227,3 +228,49 @@ def test_parse_fun_dec():
     print(array_param)
     print(pointer_param)
     print(id_param)
+
+
+def test_parse_expression():
+    parser = MuddParser(
+        'tests/test_parse_expression.bpl'
+        )
+    tree = parser.parse()
+    fun_dec = tree.children[0].children[0].children[0]
+    statement_list = fun_dec.children[5].children[1]
+    statement1 = statement_list.children[1]
+    expression1 = statement1.children[0].children[0]
+    assert expression1.children[0].kind == N_VAR
+    assert expression1.children[0].children[0].kind == T_MUL
+    assert expression1.children[0].children[1].kind == T_ID
+    assert expression1.children[1].kind == T_ASSIGN
+    assert expression1.children[2].kind == N_EXPRESSION
+    statement2 = statement_list.children[0].children[1]
+    expression2 = statement2.children[0].children[0]
+    assert expression2.children[0].kind == N_VAR
+    assert expression2.children[0].children[0].kind == T_ID
+    assert expression2.children[0].children[2].kind == N_EXPRESSION
+    assert expression2.children[1].kind == T_ASSIGN
+    assert expression2.children[2].kind == N_EXPRESSION
+    statement3 = statement_list.children[0].children[0].children[1]
+    expression3 = statement3.children[0].children[0]
+    assert expression3.children[0].kind == N_VAR
+    assert expression3.children[0].children[0].kind == T_ID
+    assert expression3.children[1].kind == T_ASSIGN
+    assert expression3.children[2].kind == N_EXPRESSION
+    print(expression1)
+    print(expression2)
+    print(expression3)
+
+
+def test_parse_comp_exp():
+    parser = MuddParser(
+        'tests/test_parse_expression.bpl'
+        )
+    tree = parser.parse()
+    fun_dec = tree.children[0].children[0].children[0]
+    base_statement_list = fun_dec.children[5].children[1]
+    statement_list = base_statement_list.children[0].children[0].children[0]
+    statement = statement_list.children[1]
+    expression = statement.children[0].children[0]
+    comp_exp = expression.children[0]
+    assert comp_exp.kind == N_COMP_EXP
