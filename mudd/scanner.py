@@ -110,6 +110,12 @@ class MuddScanner():
             self.next_token = self.data[self.current_index]
             self.current_index += 1
 
+    def get_line_number(self):
+        if self.next_token:
+            return self.next_token.line_number
+        else:
+            return 1
+
     def backtrack(self):
         self.current_index = self.backtrack_index.pop()
         self.next_token = self.data[self.current_index-1]
