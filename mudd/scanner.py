@@ -89,7 +89,7 @@ class MuddScanner():
         self.data = self._scan_file()
         self.next_token = None
         self.current_index = 0
-        # self.current_line = 1
+        self.backtrack_index = []
 
     def _read_file(self):
         file_string = ''
@@ -109,6 +109,16 @@ class MuddScanner():
         else:
             self.next_token = self.data[self.current_index]
             self.current_index += 1
+
+    def backtrack(self):
+        self.current_index = self.backtrack_index.pop()
+        self.next_token = self.data[self.current_index-1]
+
+    def set_backtrack_index(self):
+        self.backtrack_index.append(self.current_index)
+
+    def unset_backtrack_index(self):
+        self.backtrack_index.pop()
 
 
 if __name__ == '__main__':
