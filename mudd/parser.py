@@ -775,7 +775,7 @@ def is_token_kind(token, *token_kind, parse_error=True):
     if token.kind in token_kind:
         return token
     elif parse_error:
-        raise ParseError
+        raise ParseError(token.value, token.line_number)
     else:
         raise BackTrackError
 
@@ -791,17 +791,24 @@ class MuddParser():
     def parse(self):
         self.scanner.get_next_token()
         self.parse_tree = program(self.scanner)
-        self.scanner.get_next_token()
         if self.scanner.next_token.kind == T_EOF:
-            print('Accept')
-            return self.parse_tree
+            print('Parse Accept')
         else:
-            print('Reject')
-            raise ParseError
+            raise ParseError(
+                self.scanner.next_token.value,
+                self.scanner.next_token.line_number
+                )
 
 
 class ParseError(Exception):
-    pass
+    def __init__(self, value, line_number):
+        self.value = value
+        self.line_number = line_number
+
+    def __str__(self):
+        return '[ParseError] Error parsing value \'%s\' at line %d' % (
+            self.value, self.line_number
+            )
 
 
 class BackTrackError(Exception):

@@ -18,5 +18,5 @@ if __name__ == '__main__':
     except SyntaxError:
         print('[SyntaxError] Unclosed comment exists.')
 
-    except ParseError:
-        print('[ParseError] Parsing error at line %d' % (1))
+    except ParseError as parse_error:
+        print(parse_error)
