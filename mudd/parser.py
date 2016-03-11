@@ -13,7 +13,9 @@ class ParseTree():
         self.children = []
 
     def __str__(self, level=0):
-        ret = '  '*level+'%d\tLine: %d\n' % (self.kind, self.line_number)
+        ret = '  '*level+'%s\tLine: %d\n' % (
+            KIND_NAME[self.kind], self.line_number
+            )
         for child in self.children:
             ret += child.__str__(level+1)
         return ret
