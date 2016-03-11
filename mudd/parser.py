@@ -793,6 +793,7 @@ class MuddParser():
         self.parse_tree = program(self.scanner)
         if self.scanner.next_token.kind == T_EOF:
             print('Parse Accept')
+            return self.parse_tree
         else:
             raise ParseError(
                 self.scanner.next_token.value,
