@@ -40,7 +40,7 @@ def declaration_list(scanner):
     parse_tree.add(declaration(scanner))
     while not _is_end_of_declaration_list(scanner.next_token):
         parse_tree_top = ParseTree(
-            N_DECLARATION_LIST, scanner.get_line_number()
+            N_DECLARATION_LIST, parse_tree.line_number
             )
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
@@ -193,7 +193,7 @@ def param_list(scanner):
     # N_PARAM (minimum 1 parameter required)
     parse_tree.add(param(scanner))
     while not _is_end_of_param_list(scanner.next_token):
-        parse_tree_top = ParseTree(N_PARAM_LIST, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_PARAM_LIST, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         parse_tree.add(is_token_kind(scanner.next_token, T_COMMA))
@@ -407,7 +407,7 @@ def e(scanner):
     # N_T
     parse_tree.add(t(scanner))
     while _is_addop(scanner.next_token):
-        parse_tree_top = ParseTree(N_E, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_E, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         # N_ADDOP
@@ -444,7 +444,7 @@ def t(scanner):
     # N_F
     parse_tree.add(f(scanner))
     while _is_mulop(scanner.next_token):
-        parse_tree_top = ParseTree(N_T, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_T, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         # N_MULOP
@@ -598,7 +598,7 @@ def arg_list(scanner):
     # N_EXPRESSION (minimum 1 expression required)
     parse_tree.add(expression(scanner))
     while not _is_end_of_arg_list(scanner.next_token):
-        parse_tree_top = ParseTree(N_ARG_LIST, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_ARG_LIST, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         parse_tree.add(is_token_kind(scanner.next_token, T_COMMA))
@@ -628,7 +628,7 @@ def compound_stmt(scanner):
 def local_decs(scanner):
     parse_tree = ParseTree(N_LOCAL_DECS, scanner.get_line_number())
     while not _is_end_of_local_decs(scanner.next_token):
-        parse_tree_top = ParseTree(N_LOCAL_DECS, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_LOCAL_DECS, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         parse_tree.add(var_dec(scanner))
@@ -644,7 +644,7 @@ def _is_end_of_local_decs(token):
 def statement_list(scanner):
     parse_tree = ParseTree(N_STATEMENT_LIST, scanner.get_line_number())
     while not _is_end_of_statement_list(scanner.next_token):
-        parse_tree_top = ParseTree(N_STATEMENT_LIST, scanner.get_line_number())
+        parse_tree_top = ParseTree(N_STATEMENT_LIST, parse_tree.line_number)
         parse_tree_top.children.append(parse_tree)
         parse_tree = parse_tree_top
         parse_tree.add(statement(scanner))
