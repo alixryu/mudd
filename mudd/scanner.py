@@ -32,16 +32,16 @@ token_patterns = [
     (r'/\*.*', comment_error),
     (r'/*.\*/', comment_error),
     (r'\n', new_line),
-    (r'int', tokenize_partial(T_INT)),
-    (r'void', tokenize_partial(T_VOID)),
-    (r'string', tokenize_partial(T_STRING)),
-    (r'if', tokenize_partial(T_IF)),
-    (r'else', tokenize_partial(T_ELSE)),
-    (r'while', tokenize_partial(T_WHILE)),
-    (r'return', tokenize_partial(T_RETURN)),
-    (r'writeln', tokenize_partial(T_WRITELN)),
-    (r'write', tokenize_partial(T_WRITE)),
-    (r'read', tokenize_partial(T_READ)),
+    (r'int(?![a-zA-Z0-9_])', tokenize_partial(T_INT)),
+    (r'void(?![a-zA-Z0-9_])', tokenize_partial(T_VOID)),
+    (r'string(?![a-zA-Z0-9_])', tokenize_partial(T_STRING)),
+    (r'if(?![a-zA-Z0-9_])', tokenize_partial(T_IF)),
+    (r'else(?![a-zA-Z0-9_])', tokenize_partial(T_ELSE)),
+    (r'while(?![a-zA-Z0-9_])', tokenize_partial(T_WHILE)),
+    (r'return(?![a-zA-Z0-9_])', tokenize_partial(T_RETURN)),
+    (r'writeln(?![a-zA-Z0-9_])', tokenize_partial(T_WRITELN)),
+    (r'write(?![a-zA-Z0-9_])', tokenize_partial(T_WRITE)),
+    (r'read(?![a-zA-Z0-9_])', tokenize_partial(T_READ)),
     (r';', tokenize_partial(T_SEMICOL)),
     (r',', tokenize_partial(T_COMMA)),
     (r'\[', tokenize_partial(T_LBRACK)),
@@ -75,9 +75,9 @@ class Token():
         self.value = value
         self.line_number = line_number
 
-    def __repr__(self):
-        return 'Kind: %s\tValue: %s\t\tLine: %s' % (
-            str(self.kind), str(self.value), str(self.line_number)
+    def __str__(self, level=0):
+        return '  '*level+'Token: %s\tValue: %s\t\tLine: %s\n' % (
+            str(KIND_NAME[self.kind]), str(self.value), str(self.line_number)
             )
 
 
@@ -89,7 +89,7 @@ class MuddScanner():
         self.data = self._scan_file()
         self.next_token = None
         self.current_index = 0
-        # self.current_line = 1
+        self.backtrack_index = []
 
     def _read_file(self):
         file_string = ''
@@ -109,6 +109,22 @@ class MuddScanner():
         else:
             self.next_token = self.data[self.current_index]
             self.current_index += 1
+
+    def get_line_number(self):
+        if self.next_token:
+            return self.next_token.line_number
+        else:
+            return 1
+
+    def backtrack(self):
+        self.current_index = self.backtrack_index.pop()
+        self.next_token = self.data[self.current_index-1]
+
+    def set_backtrack_index(self):
+        self.backtrack_index.append(self.current_index)
+
+    def unset_backtrack_index(self):
+        self.backtrack_index.pop()
 
 
 if __name__ == '__main__':

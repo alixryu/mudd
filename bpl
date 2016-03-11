@@ -1,5 +1,5 @@
 #!/bin/bash
 PYTHONPATH="${PYTHONPATH}:$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/mudd"
 export PYTHONPATH
-# run scanner
-python3 mudd/scanner.py ${BASH_ARGV[0]}
+# run compiler
+python3 mudd/frontdesk.py ${BASH_ARGV[0]}
