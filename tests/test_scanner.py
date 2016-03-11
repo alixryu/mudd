@@ -1,4 +1,4 @@
-from mudd import T_INT, T_ID, T_EOF
+from mudd import T_INT, T_ID, T_EOF, KIND_NAME
 from mudd.scanner import Token, MuddScanner as Scanner
 
 
@@ -16,8 +16,8 @@ def check_token_constructor():
 
 
 def check_token_repr(token, kind, line_number, value):
-    expected = 'Kind: %s\tValue: %s\t\tLine: %s\n' % (
-        str(kind), str(value), str(line_number)
+    expected = 'Token: %s\tValue: %s\t\tLine: %s\n' % (
+        str(KIND_NAME[kind]), str(value), str(line_number)
         )
     assert str(token) == expected
 
