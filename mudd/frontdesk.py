@@ -15,8 +15,8 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print('[FileNotFoundError] No such file is found.')
 
-    except SyntaxError:
-        print('[SyntaxError] Unclosed comment exists.')
+    except SyntaxError as syntax_error:
+        print('[SyntaxError] %s' % syntax_error)
 
     except ParseError as parse_error:
         print(parse_error)

@@ -12,11 +12,14 @@ def new_line(scanner, token):
 
 def comment_new_line(scanner, token):
     MuddScanner.line_number += token.count('\n')
-    return None
 
 
-def comment_error(scanner, token):
-    raise SyntaxError
+def scan_error(scanner, token, error_kind):
+    raise SyntaxError(error_kind)
+
+
+def scan_error_partial(error_kind):
+    return partial(scan_error, error_kind=error_kind)
 
 
 def tokenize(scanner, token, token_kind):
@@ -28,9 +31,10 @@ def tokenize_partial(token_kind):
 
 
 token_patterns = [
-    (r'/\*.*\*/', comment_new_line),
-    (r'/\*.*', comment_error),
-    (r'/*.\*/', comment_error),
+    (r'/\*.*?\*/', comment_new_line),
+    (r'/\*|\*/', scan_error_partial('Comment error')),
+    (r'".*?"', tokenize_partial(T_STRLIT)),
+    (r'"', scan_error_partial('String literal error.')),
     (r'\n', new_line),
     (r'int(?![a-zA-Z0-9_])', tokenize_partial(T_INT)),
     (r'void(?![a-zA-Z0-9_])', tokenize_partial(T_VOID)),
@@ -66,6 +70,7 @@ token_patterns = [
     (r'[a-zA-Z][a-zA-Z0-9_]*', tokenize_partial(T_ID)),
     (r'\d+', tokenize_partial(T_NUM)),
     (r'\s+', None),  # ignore whitespace
+    (r'.*', scan_error_partial('General error.')),
     ]
 
 
@@ -145,5 +150,5 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print('[FileNotFoundError] No such file is found.')
 
-    except SyntaxError:
-        print('[SyntaxError] Unclosed comment exists.')
+    except SyntaxError as e:
+        print('[SyntaxError] %s' % e)
