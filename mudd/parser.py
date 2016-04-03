@@ -553,6 +553,13 @@ def factor(scanner):
         elif scanner.next_token.kind == T_LPAREN:
             scanner.backtrack()
             parse_tree.add(fun_call(scanner))
+        else:
+            scanner.backtrack()
+            # T_ID
+            parse_tree.add(
+                is_token_kind(scanner.next_token, T_ID)
+                )
+            scanner.get_next_token()
 
     return parse_tree
 
