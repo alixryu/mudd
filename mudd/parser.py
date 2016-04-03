@@ -72,7 +72,6 @@ def declaration(scanner):
 
 
 def var_dec(scanner, parse_error=True):
-    parse_tree = None
     try:
         parse_tree = ParseTree(N_VAR_DEC, scanner.get_line_number())
         # N_TYPE_SPECIFIER
@@ -125,12 +124,9 @@ def var_dec(scanner, parse_error=True):
                 )
             )
         scanner.get_next_token()
-
-    except BackTrackError:
-        parse_tree = None
-
-    finally:
         return parse_tree
+    except BackTrackError:
+        return None
 
 
 def fun_dec(scanner):
@@ -305,21 +301,18 @@ def expression(scanner):
 
 
 def expression_assign(scanner, parse_error=True):
-    assign = None
     try:
         # T_ASSIGN
         assign = is_token_kind(
             scanner.next_token, T_ASSIGN, parse_error=parse_error
             )
         scanner.get_next_token()
-    except BackTrackError:
-        assign = None
-    finally:
         return assign
+    except BackTrackError:
+        return None
 
 
 def var(scanner, parse_error=True):
-    parse_tree = None
     try:
         parse_tree = ParseTree(N_VAR, scanner.get_line_number())
 
@@ -360,11 +353,9 @@ def var(scanner, parse_error=True):
                     )
                 )
             scanner.get_next_token()
-    except BackTrackError:
-        parse_tree = None
-
-    finally:
         return parse_tree
+    except BackTrackError:
+        return None
 
 
 def comp_exp(scanner):
