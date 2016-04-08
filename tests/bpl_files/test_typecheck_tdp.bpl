@@ -5,5 +5,6 @@ string y;
 int z[10];
 string *k;
 
-int first(void) {}
-int second(int a, string b, int *c) {}
+int first(void) {int x; int y;}
+int second(int a, string b, int *c) {string at[2];}
+void third(void) {}
