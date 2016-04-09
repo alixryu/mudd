@@ -1,4 +1,5 @@
 from .parser import MuddParser
+from .scanner import Token
 
 from mudd import *
 
@@ -155,7 +156,21 @@ def tdp_expression_stmt(expression_stmt, local_symbols):
 
 
 def tdp_expression(expression, local_symbols):
-    pass
+    tdp_find_reference(expression, local_symbols)
+
+
+def tdp_find_reference(tree, local_symbols):
+    try:
+        if isinstance(tree, Token):
+            if tree.kind == T_ID:
+                declaration = local_symbols[tree.value]
+                tree.declaration = declaration
+        else:
+            for child in tree.children:
+                tdp_find_reference(child, local_symbols)
+    except KeyError:
+        # TODO: raise error
+        print('[ERROR] tdp_find_reference')
 
 
 def extract(tree, non_terminal, index=0):

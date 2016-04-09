@@ -72,3 +72,21 @@ def test_tdp_fun_dec_statement_list():
              ) == set()
 
     traverse_tree(checker.parse_tree, [N_STATEMENT], check_tree)
+
+
+def test_tdp_expression():
+    checker = set_up()
+
+    def check_tree(tree):
+        if tree.children[0].kind == N_VAR:
+            assert tree.children[0].children[0].kind == T_ID
+            assert tree.children[0].children[0].value == 'x'
+            var_dec = tree.children[0].children[0].declaration
+            assert var_dec.children[0].children[0].kind == T_INT
+            assert var_dec.children[1].kind == T_ID
+            assert var_dec.children[1].value == 'x'
+        elif tree.children[0].kind == N_COMP_EXP:
+            assert True
+
+    traverse_tree(checker.parse_tree, [N_EXPRESSION], check_tree)
+    print(checker.parse_tree)
