@@ -135,12 +135,14 @@ def tdp_statement(statement, local_symbols):
 
         else_statement = extract(statement, N_STATEMENT, 1)
         tdp_statement(else_statement, local_symbols)
+        bup_if_stmt(statement)
     elif statement.kind == N_WHILE_STMT:
         expression = extract(statement, N_EXPRESSION)
         tdp_expression(expression, local_symbols)
 
         body_statement = extract(statement, N_STATEMENT)
         tdp_statement(body_statement, local_symbols)
+        bup_while_stmt(statement)
     elif statement.kind in [N_RETURN_STMT, N_WRITE_STMT]:
         expression = extract(statement, N_EXPRESSION)
         tdp_expression(expression, local_symbols)
@@ -173,6 +175,71 @@ def tdp_find_reference(tree, local_symbols):
         print('[ERROR] tdp_find_reference')
 
 
+def bup_statement(statement):
+    pass
+
+
+def bup_while_stmt(while_stmt):
+    expression = extract(while_stmt, N_EXPRESSION)
+    expression_type = bup_expression(expression)
+
+    if expression_type != T_INT:
+        raise TypeCheckError()
+
+    statement = extract(while_stmt, N_STATEMENT)
+    bup_statement(statement)
+
+
+def bup_if_stmt(if_statement):
+    expression = extract(if_statement, N_EXPRESSION)
+    expression_type = bup_expression(expression)
+
+    if expression_type != T_INT:
+        raise TypeCheckError()
+
+    statement = extract(if_statement, N_STATEMENT)
+    bup_statement(statement)
+
+    else_statement = extract(statement, N_STATEMENT, 1)
+    bup_statement(else_statement)
+
+
+def bup_expression(expression):
+    if not hasattr(expression, 'ttype'):
+        expression.ttype = None
+
+    var = extract(expression, N_VAR)
+    if var:
+        t_id = extract(var, T_ID)
+        left_hand_type = get_type(t_id.declaration)
+        body_expression = extract(expression, N_EXPRESSION)
+        right_hand_type = bup_expression(body_expression)
+
+        if left_hand_type != right_hand_type:
+            raise TypeCheckError()
+
+        expression.ttype = left_hand_type
+
+        return left_hand_type
+    else:
+        comp_exp = extract(expression, N_COMP_EXP)
+        comp_exp_type = bup_comp_exp(comp_exp)
+
+        expression.ttype = comp_exp_type
+
+        return comp_exp_type
+
+
+def bup_comp_exp(comp_exp):
+    return T_INT
+
+
+def get_type(var_dec):
+    type_identifier = extract(var_dec, N_TYPE_SPECIFIER)
+    the_type = type_identifier.children[0]
+    return the_type
+
+
 def extract(tree, non_terminal, index=0):
     result = [
         child for child in tree.children if child.kind == non_terminal
@@ -180,11 +247,9 @@ def extract(tree, non_terminal, index=0):
     return result[index] if result else None
 
 
-def update_symbols(child_symbols, parent_symbols):
-    for r_k, r_v in parent_symbols.items():
-        if r_k not in child_symbols.keys():
-            child_symbols[r_k] = r_v
+class TypeCheckError(Exception):
+    def __init__(self):
+        pass
 
-
-def add_symbol(symbols, key, value):
-    symbols[key] = value
+    def __str__(self):
+        return '[TypeCheckError] Error type checking'
