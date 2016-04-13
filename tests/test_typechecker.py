@@ -89,4 +89,9 @@ def test_tdp_expression():
             assert True
 
     traverse_tree(checker.parse_tree, [N_EXPRESSION], check_tree)
-    print(checker.parse_tree)
+
+
+def test_bottom_up_pass():
+    checker = set_up()
+    checker.bottom_up_pass()
+    assert True

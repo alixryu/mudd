@@ -731,7 +731,7 @@ def return_stmt(scanner):
 
 
 def write_stmt(scanner):
-    parse_tree = ParseTree(N_RETURN_STMT, scanner.get_line_number())
+    parse_tree = ParseTree(N_WRITE_STMT, scanner.get_line_number())
 
     if scanner.next_token.kind == T_WRITE:
         # T_WRITE

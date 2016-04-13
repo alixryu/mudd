@@ -5,7 +5,13 @@ string y;
 int z[10];
 string *k;
 
-int first(void) {int x; int y; {string j; int e[9];}}
+int first(void) {
+    int x; int y;
+    {
+        string j; int e[9];
+    }
+}
+
 int second(int a, string b, int *c) {
     string at[2];
 
@@ -21,5 +27,9 @@ int second(int a, string b, int *c) {
         string inwhile;
         x = x + 1;
     }
+    x = first();
+    x = second(a, b, *c);
+    return x;
 }
+
 void third(void) {}

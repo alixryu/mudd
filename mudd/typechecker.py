@@ -4,19 +4,25 @@ from .scanner import Token
 from mudd import *
 
 
+debug = False
+
+
 class MuddTypeChecker():
     """Two-Pass Type Checker
 
     """
-    def __init__(self, filename):
+    def __init__(self, filename, dbg=False):
         self.parse_tree = MuddParser(filename).parse()
         # {T_ID.value : N_VAR_DEC | N_FUN_DEC}
         self.symbols = self.parse_tree.symbols
+        if dbg:
+            global debug
+            debug = True
 
     def top_down_pass(self):
-        self._tree_traversal(self.parse_tree)
+        self._tdp_tree_traversal(self.parse_tree)
 
-    def _tree_traversal(self, tree):
+    def _tdp_tree_traversal(self, tree):
         """Recursive depth-first-search tree traversal
 
         """
@@ -31,12 +37,23 @@ class MuddTypeChecker():
             self.symbols.update(child_symbols)
         else:
             for child in tree.children:
-                self.symbols.update(self._tree_traversal(child))
+                self.symbols.update(self._tdp_tree_traversal(child))
 
         return self.symbols
 
     def bottom_up_pass(self):
-        pass
+        self._bup_tree_traversal(self.parse_tree)
+
+    def _bup_tree_traversal(self, tree):
+        """Recursive depth-first-search tree traversal
+
+        """
+        if tree.kind in [N_FUN_DEC]:
+            bup_fun_dec(tree)
+        else:
+            if hasattr(tree, 'children'):
+                for child in tree.children:
+                    self._bup_tree_traversal(child)
 
 
 def tdp_var_dec(var_dec):
@@ -61,8 +78,7 @@ def tdp_fun_dec(fun_dec, symbols):
         tdp_compound_stmt(compound_stmt, local_symbols)
 
     except IndexError:
-        # TODO: raise error
-        print('[ERROR] tdp_fun_dec')
+        raise TypeCheckError(fun_dec)
 
 
 def tdp_compound_stmt(compound_stmt, symbols):
@@ -135,14 +151,12 @@ def tdp_statement(statement, local_symbols):
 
         else_statement = extract(statement, N_STATEMENT, 1)
         tdp_statement(else_statement, local_symbols)
-        bup_if_stmt(statement)
     elif statement.kind == N_WHILE_STMT:
         expression = extract(statement, N_EXPRESSION)
         tdp_expression(expression, local_symbols)
 
         body_statement = extract(statement, N_STATEMENT)
         tdp_statement(body_statement, local_symbols)
-        bup_while_stmt(statement)
     elif statement.kind in [N_RETURN_STMT, N_WRITE_STMT]:
         expression = extract(statement, N_EXPRESSION)
         tdp_expression(expression, local_symbols)
@@ -154,7 +168,8 @@ def tdp_statement(statement, local_symbols):
 
 def tdp_expression_stmt(expression_stmt, local_symbols):
     expression = extract(expression_stmt, N_EXPRESSION)
-    tdp_expression(expression, local_symbols)
+    if expression:
+        tdp_expression(expression, local_symbols)
 
 
 def tdp_expression(expression, local_symbols):
@@ -167,41 +182,105 @@ def tdp_find_reference(tree, local_symbols):
             if tree.kind == T_ID:
                 declaration = local_symbols[tree.value]
                 tree.declaration = declaration
-        else:
+                if debug:
+                    print('Variable %s on line %d linked to declaration ' \
+                        '%s on line %s' % (
+                        tree.value,
+                        tree.line_number,
+                        extract(declaration, T_ID).value,
+                        declaration.line_number
+                        ))
+        elif tree:
             for child in tree.children:
                 tdp_find_reference(child, local_symbols)
     except KeyError:
-        # TODO: raise error
-        print('[ERROR] tdp_find_reference')
+        raise TypeCheckError(tree)
 
 
-def bup_statement(statement):
-    pass
+def bup_fun_dec(fun_dec):
+    return_type = extract(fun_dec, N_TYPE_SPECIFIER).children[0].kind
+    compound_stmt = extract(fun_dec, N_COMPOUND_STMT)
+    bup_compound_stmt(compound_stmt, return_type)
 
 
-def bup_while_stmt(while_stmt):
+def bup_statement_list(statement_list, return_type):
+    if statement_list.children:
+        # N_STATEMENT_LIST
+        body_statement_list = extract(statement_list, N_STATEMENT_LIST)
+        bup_statement_list(body_statement_list, return_type)
+
+        # N_STATEMENT
+        statement = extract(statement_list, N_STATEMENT)
+        bup_statement(statement, return_type)
+
+
+def bup_statement(statement, return_type):
+    statement = statement.children[0]
+    if statement.kind == N_EXPRESSION_STMT:
+        bup_expression_stmt(statement)
+    elif statement.kind == N_COMPOUND_STMT:
+        bup_compound_stmt(statement, return_type)
+    elif statement.kind == N_IF_STMT:
+        bup_if_stmt(statement, return_type)
+    elif statement.kind == N_WHILE_STMT:
+        bup_while_stmt(statement, return_type)
+    elif statement.kind == N_RETURN_STMT:
+        bup_return_stmt(statement, return_type)
+    elif statement.kind == N_WRITE_STMT:
+        bup_write_stmt(statement)
+
+
+def bup_while_stmt(while_stmt, return_type):
     expression = extract(while_stmt, N_EXPRESSION)
     expression_type = bup_expression(expression)
 
     if expression_type != T_INT:
-        raise TypeCheckError()
+        raise TypeCheckError(while_stmt)
 
     statement = extract(while_stmt, N_STATEMENT)
-    bup_statement(statement)
+    bup_statement(statement, return_type)
 
 
-def bup_if_stmt(if_statement):
+def bup_if_stmt(if_statement, return_type):
     expression = extract(if_statement, N_EXPRESSION)
     expression_type = bup_expression(expression)
 
     if expression_type != T_INT:
-        raise TypeCheckError()
+        raise TypeCheckError(if_statement)
 
     statement = extract(if_statement, N_STATEMENT)
-    bup_statement(statement)
+    bup_statement(statement, return_type)
 
-    else_statement = extract(statement, N_STATEMENT, 1)
-    bup_statement(else_statement)
+    else_statement = extract(if_statement, N_STATEMENT, 1)
+    if else_statement:
+        bup_statement(else_statement, return_type)
+
+
+def bup_return_stmt(return_stmt, return_type):
+    expression = extract(return_stmt, N_EXPRESSION)
+    if expression:
+        if bup_expression(expression) != return_type:
+            raise TypeCheckError(return_stmt)
+    elif return_type != T_VOID:  # and not expression
+        raise TypeCheckError(return_stmt)
+
+
+def bup_write_stmt(write_stmt):
+    expression = extract(write_stmt, N_EXPRESSION)
+    if expression:
+        bup_expression(expression)
+
+
+def bup_compound_stmt(compound_stmt, return_type):
+    statement_list = extract(compound_stmt, N_STATEMENT_LIST)
+    if statement_list:
+        bup_statement_list(statement_list, return_type)
+
+
+def bup_expression_stmt(expression_stmt):
+    expression = extract(expression_stmt, N_EXPRESSION)
+    if expression:
+        bup_expression(expression)
 
 
 def bup_expression(expression):
@@ -216,27 +295,165 @@ def bup_expression(expression):
         right_hand_type = bup_expression(body_expression)
 
         if left_hand_type != right_hand_type:
-            raise TypeCheckError()
+            raise TypeCheckError(expression)
 
         expression.ttype = left_hand_type
-
-        return left_hand_type
     else:
         comp_exp = extract(expression, N_COMP_EXP)
         comp_exp_type = bup_comp_exp(comp_exp)
 
         expression.ttype = comp_exp_type
 
-        return comp_exp_type
+    if debug:
+        print('Type %s assigned to expression in line %s' % (
+            KIND_NAME[expression.ttype], expression.line_number
+            ))
+
+    return expression.ttype
 
 
 def bup_comp_exp(comp_exp):
-    return T_INT
+    e1 = extract(comp_exp, N_E)
+    e2 = extract(comp_exp, N_E, 1)
+
+    e1_type = bup_e(e1)
+
+    if e2:
+        e2_type = bup_e(e2)
+        # Only int operations available
+        if e1_type != T_INT or e1_type != e2_type:
+            raise TypeCheckError(comp_exp)
+
+    return e1_type
+
+
+def bup_e(e):
+    body_e = extract(e, N_E)
+    t = extract(e, N_T)
+
+    t_type = bup_t(t)
+
+    if body_e:
+        body_e_type = bup_e(body_e)
+        # Only int operations available
+        if body_e_type != T_INT or body_e_type != t_type:
+            raise TypeCheckError(e)
+
+    return t_type
+
+
+def bup_t(t):
+    body_t = extract(t, N_T)
+    f = extract(t, N_F)
+
+    f_type = bup_f(f)
+
+    if body_t:
+        body_t_type = bup_t(body_t)
+        # Only int operations available
+        if body_t_type != T_INT or body_t_type != f_type:
+            raise TypeCheckError(t)
+
+    return f_type
+
+
+def bup_f(f):
+    factor = extract(f, N_FACTOR)
+    if factor:
+        factor_type = bup_factor(factor)
+        return factor_type
+    else:
+        f_body = extract(f, N_F)
+        body_f_type = bup_f(f_body)
+        return body_f_type
+
+
+def bup_factor(factor):
+    expression = extract(factor, N_EXPRESSION)
+    fun_call = extract(factor, N_FUN_CALL)
+    num = extract(factor, T_NUM)
+    string = extract(factor, T_STRLIT)
+    t_id = extract(factor, T_ID)
+    # TODO: read()
+
+    if expression:
+        return bup_expression(expression)
+    elif fun_call:
+        return bup_fun_call(fun_call)
+    elif num:
+        return T_INT
+    elif string:
+        return T_STRING
+    elif t_id:
+        return get_type(t_id.declaration)
+    else:
+        # TODO: for debugging purposes
+        return None
+
+
+def bup_fun_call(fun_call):
+    fun_dec = extract(fun_call, T_ID).declaration
+
+    args_types = bup_args(fun_call)
+    fun_dec_types = get_type_from_fun_dec(fun_dec)
+
+    if args_types != fun_dec_types:
+        raise TypeCheckError(fun_call)
+
+    fun_type = extract(fun_dec, N_TYPE_SPECIFIER).children[0].kind
+    return fun_type
+
+
+def bup_args(fun_call):
+    args = extract(fun_call, N_ARGS)
+    arg_list = extract(args, N_ARG_LIST)
+
+    if arg_list:
+        return bup_arg_list(arg_list)
+    else:
+        return []
+
+
+def bup_arg_list(arg_list):
+    arg_list_type = []
+    body_arg_list = extract(arg_list, N_ARG_LIST)
+    if body_arg_list:
+        arg_list_type.extend(bup_arg_list(body_arg_list))
+
+    expression = extract(arg_list, N_EXPRESSION)
+    expression_type = bup_expression(expression)
+    arg_list_type.append(expression_type)
+
+    return arg_list_type
+
+
+def get_type_from_fun_dec(fun_dec):
+    params = extract(fun_dec, N_PARAMS)
+    param_list = extract(params, N_PARAM_LIST)
+
+    if param_list:
+        return bup_param_list(param_list)
+    else:
+        return []
+
+
+def bup_param_list(param_list):
+    param_list_type = []
+    body_param_list = extract(param_list, N_PARAM_LIST)
+    if body_param_list:
+        param_list_type.extend(bup_param_list(body_param_list))
+
+    param = extract(param_list, N_PARAM)
+    param_type = get_type(param)
+    param_list_type.append(param_type)
+
+    return param_list_type
 
 
 def get_type(var_dec):
     type_identifier = extract(var_dec, N_TYPE_SPECIFIER)
-    the_type = type_identifier.children[0]
+    # TODO: replace .kind to something that deals with pointers and arrays
+    the_type = type_identifier.children[0].kind
     return the_type
 
 
@@ -244,12 +461,15 @@ def extract(tree, non_terminal, index=0):
     result = [
         child for child in tree.children if child.kind == non_terminal
         ]
-    return result[index] if result else None
+    return result[index] if result and len(result) > index else None
 
 
 class TypeCheckError(Exception):
-    def __init__(self):
-        pass
+    def __init__(self, tree):
+        self.tree = tree
+        self.line_number = tree.line_number
 
     def __str__(self):
-        return '[TypeCheckError] Error type checking'
+        return '[TypeCheckError] Error in %s in line %d' % (
+            KIND_NAME[self.tree.kind], self.line_number
+            )
