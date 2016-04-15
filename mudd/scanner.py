@@ -79,6 +79,7 @@ class Token():
         self.kind = kind
         self.value = value
         self.line_number = line_number
+        self.declaration = None
 
     def __str__(self, level=0):
         return '  '*level+'Token: %s\tValue: %s\t\tLine: %s\n' % (

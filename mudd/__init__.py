@@ -79,6 +79,17 @@ N_ARGS = 228
 N_ARG_LIST = 229
 N_LOCAL_DECS = 230
 
+# BPL Types
+Y_VOID = 300
+Y_INT = 301
+Y_STR = 302
+Y_P_INT = 303
+Y_P_STR = 304
+Y_A_INT = 305
+Y_A_STR = 306
+Y_AD_INT = 307
+Y_AD_STR = 308
+
 KIND_NAME = {
     100: 'T_EOF',
     101: 'T_INT',
@@ -148,4 +159,13 @@ KIND_NAME = {
     228: 'N_ARGS',
     229: 'N_ARG_LIST',
     230: 'N_LOCAL_DECS',
+    300: 'Y_VOID',
+    301: 'Y_INT',
+    302: 'Y_STR',
+    303: 'Y_P_INT',
+    304: 'Y_P_STR',
+    305: 'Y_A_INT',
+    306: 'Y_A_STR',
+    307: 'Y_AD_INT',
+    308: 'Y_AD_STR',
 }

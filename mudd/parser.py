@@ -11,6 +11,7 @@ class ParseTree():
         self.kind = kind
         self.line_number = line_number
         self.children = []
+        self.symbols = {}
 
     def __str__(self, level=0):
         ret = '  '*level+'%s\tLine: %d\n' % (
@@ -730,7 +731,7 @@ def return_stmt(scanner):
 
 
 def write_stmt(scanner):
-    parse_tree = ParseTree(N_RETURN_STMT, scanner.get_line_number())
+    parse_tree = ParseTree(N_WRITE_STMT, scanner.get_line_number())
 
     if scanner.next_token.kind == T_WRITE:
         # T_WRITE
@@ -792,7 +793,6 @@ class MuddParser():
         self.scanner.get_next_token()
         self.parse_tree = program(self.scanner)
         if self.scanner.next_token.kind == T_EOF:
-            print('Parse Accept')
             return self.parse_tree
         else:
             raise ParseError(

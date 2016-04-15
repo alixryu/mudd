@@ -40,7 +40,7 @@ def test_parse_single_id_expression():
 
 def test_parse_statement_only_compound_statement():
     parser = MuddParser(
-        'tests/test_parse_statement_only_compound_statement.bpl'
+        'tests/bpl_files/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
 
@@ -61,7 +61,7 @@ def test_parse_statement_only_compound_statement():
 
 def test_parse_while_statement():
     parser = MuddParser(
-        'tests/test_parse_statement_only_compound_statement.bpl'
+        'tests/bpl_files/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
@@ -76,7 +76,7 @@ def test_parse_while_statement():
 
 def test_parse_if_statement():
     parser = MuddParser(
-        'tests/test_parse_statement_only_compound_statement.bpl'
+        'tests/bpl_files/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
@@ -102,7 +102,7 @@ def test_parse_if_statement():
 
 def test_parse_return_statement():
     parser = MuddParser(
-        'tests/test_parse_statement_only_compound_statement.bpl'
+        'tests/bpl_files/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
@@ -122,7 +122,7 @@ def test_parse_return_statement():
 
 def test_parse_write_statement():
     parser = MuddParser(
-        'tests/test_parse_statement_only_compound_statement.bpl'
+        'tests/bpl_files/test_parse_statement_only_compound_statement.bpl'
         )
     tree = parser.parse()
     compound_stmt = tree.children[0].children[0].children[0].children[5]
@@ -147,7 +147,7 @@ def test_parse_write_statement():
 
 def test_parse_declaration():
     parser = MuddParser(
-        'tests/test_parse_variable_declaration.bpl'
+        'tests/bpl_files/test_parse_variable_declaration.bpl'
         )
     tree = parser.parse()
     assert tree.kind == N_PROGRAM
@@ -159,7 +159,7 @@ def test_parse_declaration():
 
 def test_parse_var_dec():
     parser = MuddParser(
-        'tests/test_parse_variable_declaration.bpl'
+        'tests/bpl_files/test_parse_variable_declaration.bpl'
         )
     tree = parser.parse()
     assert tree.kind == N_PROGRAM
@@ -192,7 +192,7 @@ def test_parse_var_dec():
 
 def test_parse_fun_dec():
     parser = MuddParser(
-        'tests/test_parse_function_declaration.bpl'
+        'tests/bpl_files/test_parse_function_declaration.bpl'
         )
     tree = parser.parse()
     assert tree.kind == N_PROGRAM
@@ -233,7 +233,7 @@ def test_parse_fun_dec():
 
 def test_parse_expression():
     parser = MuddParser(
-        'tests/test_parse_expression.bpl'
+        'tests/bpl_files/test_parse_expression.bpl'
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
@@ -265,7 +265,7 @@ def test_parse_expression():
 
 def test_parse_comp_exp():
     parser = MuddParser(
-        'tests/test_parse_expression.bpl'
+        'tests/bpl_files/test_parse_expression.bpl'
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
@@ -279,7 +279,7 @@ def test_parse_comp_exp():
 
 def test_parse_fun_call():
     parser = MuddParser(
-        'tests/test_parse_expression.bpl'
+        'tests/bpl_files/test_parse_expression.bpl'
         )
     tree = parser.parse()
     fun_dec = tree.children[0].children[0].children[0]
@@ -302,7 +302,7 @@ def test_parse_fun_call():
 
 def test_parse_local_decs():
     parser = MuddParser(
-        'tests/test_parse_local_decs.bpl'
+        'tests/bpl_files/test_parse_local_decs.bpl'
         )
     tree = parser.parse()
     fun_dec1 = tree.children[0].children[1].children[0]
