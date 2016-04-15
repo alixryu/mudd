@@ -28,7 +28,7 @@ int second(int a, string b, int *c) {
         x = x + 1;
     }
     x = first();
-    x = second(a, b, *c);
+    x = second(a, b, c);
     return x;
 }
 

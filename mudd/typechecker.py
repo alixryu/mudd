@@ -183,13 +183,13 @@ def tdp_find_reference(tree, local_symbols):
                 declaration = local_symbols[tree.value]
                 tree.declaration = declaration
                 if debug:
-                    print('Variable %s on line %d linked to declaration ' \
-                        '%s on line %s' % (
-                        tree.value,
-                        tree.line_number,
-                        extract(declaration, T_ID).value,
-                        declaration.line_number
-                        ))
+                    print('Variable %s on line %d linked to declaration '
+                          '%s on line %s' % (
+                            tree.value,
+                            tree.line_number,
+                            extract(declaration, T_ID).value,
+                            declaration.line_number
+                            ))
         elif tree:
             for child in tree.children:
                 tdp_find_reference(child, local_symbols)
@@ -198,7 +198,7 @@ def tdp_find_reference(tree, local_symbols):
 
 
 def bup_fun_dec(fun_dec):
-    return_type = extract(fun_dec, N_TYPE_SPECIFIER).children[0].kind
+    return_type = get_type(fun_dec)
     compound_stmt = extract(fun_dec, N_COMPOUND_STMT)
     bup_compound_stmt(compound_stmt, return_type)
 
@@ -234,7 +234,7 @@ def bup_while_stmt(while_stmt, return_type):
     expression = extract(while_stmt, N_EXPRESSION)
     expression_type = bup_expression(expression)
 
-    if expression_type != T_INT:
+    if expression_type != Y_INT:
         raise TypeCheckError(while_stmt)
 
     statement = extract(while_stmt, N_STATEMENT)
@@ -245,7 +245,7 @@ def bup_if_stmt(if_statement, return_type):
     expression = extract(if_statement, N_EXPRESSION)
     expression_type = bup_expression(expression)
 
-    if expression_type != T_INT:
+    if expression_type != Y_INT:
         raise TypeCheckError(if_statement)
 
     statement = extract(if_statement, N_STATEMENT)
@@ -261,7 +261,7 @@ def bup_return_stmt(return_stmt, return_type):
     if expression:
         if bup_expression(expression) != return_type:
             raise TypeCheckError(return_stmt)
-    elif return_type != T_VOID:  # and not expression
+    elif return_type != Y_VOID:  # and not expression
         raise TypeCheckError(return_stmt)
 
 
@@ -321,7 +321,7 @@ def bup_comp_exp(comp_exp):
     if e2:
         e2_type = bup_e(e2)
         # Only int operations available
-        if e1_type != T_INT or e1_type != e2_type:
+        if e1_type != Y_INT or e1_type != e2_type:
             raise TypeCheckError(comp_exp)
 
     return e1_type
@@ -336,7 +336,7 @@ def bup_e(e):
     if body_e:
         body_e_type = bup_e(body_e)
         # Only int operations available
-        if body_e_type != T_INT or body_e_type != t_type:
+        if body_e_type != Y_INT or body_e_type != t_type:
             raise TypeCheckError(e)
 
     return t_type
@@ -351,7 +351,7 @@ def bup_t(t):
     if body_t:
         body_t_type = bup_t(body_t)
         # Only int operations available
-        if body_t_type != T_INT or body_t_type != f_type:
+        if body_t_type != Y_INT or body_t_type != f_type:
             raise TypeCheckError(t)
 
     return f_type
@@ -361,10 +361,23 @@ def bup_f(f):
     factor = extract(f, N_FACTOR)
     if factor:
         factor_type = bup_factor(factor)
-        return factor_type
+        if extract(f, T_MUL):  # pointer
+            if factor_type == Y_INT:
+                return Y_P_INT
+            elif factor_type == Y_STR:
+                return Y_P_STR
+        elif extract(f, T_AND):  # address
+            if factor_type == Y_INT:
+                return Y_AD_INT
+            elif factor_type == Y_STR:
+                return Y_AD_STR
+        else:
+            return factor_type
     else:
         f_body = extract(f, N_F)
         body_f_type = bup_f(f_body)
+        if body_f_type != Y_INT:
+            raise TypeCheckError()
         return body_f_type
 
 
@@ -374,18 +387,25 @@ def bup_factor(factor):
     num = extract(factor, T_NUM)
     string = extract(factor, T_STRLIT)
     t_id = extract(factor, T_ID)
-    # TODO: read()
+    # TODO: read(), <id>[N_EXPRESSION], *<id>
+    t_read = extract(factor, T_READ)
 
-    if expression:
+    if expression and not t_id:
         return bup_expression(expression)
     elif fun_call:
         return bup_fun_call(fun_call)
-    elif num:
-        return T_INT
-    elif string:
-        return T_STRING
+    elif t_read:
+        return get_type(t_read)  # Y_INT
     elif t_id:
+        if expression:
+            expression_type = bup_expression(expression)
+            if expression_type != Y_INT:
+                raise TypeCheckError(expression)
         return get_type(t_id.declaration)
+    elif num:
+        return get_type(num)  # Y_INT
+    elif string:
+        return get_type(string)  # Y_STRING
     else:
         # TODO: for debugging purposes
         return None
@@ -400,7 +420,7 @@ def bup_fun_call(fun_call):
     if args_types != fun_dec_types:
         raise TypeCheckError(fun_call)
 
-    fun_type = extract(fun_dec, N_TYPE_SPECIFIER).children[0].kind
+    fun_type = get_type(fun_dec)
     return fun_type
 
 
@@ -451,10 +471,36 @@ def bup_param_list(param_list):
 
 
 def get_type(var_dec):
+
+    if var_dec.kind == T_NUM:
+        return Y_INT
+    elif var_dec.kind == T_STRLIT:
+        return Y_STR
+
     type_identifier = extract(var_dec, N_TYPE_SPECIFIER)
-    # TODO: replace .kind to something that deals with pointers and arrays
-    the_type = type_identifier.children[0].kind
-    return the_type
+    base_type = type_identifier.children[0].kind
+
+    if extract(var_dec, T_MUL):  # POINTER
+        if base_type == T_INT:
+            return Y_P_INT
+        elif base_type == T_STRING:
+            return Y_P_STR
+        else:
+            raise TypeCheckError(var_dec)
+    elif extract(var_dec, T_LBRACK):  # ARRAY
+        if base_type == T_INT:
+            return Y_A_INT
+        elif base_type == T_STRING:
+            return Y_A_STR
+        else:
+            raise TypeCheckError(var_dec)
+    else:
+        if base_type == T_INT:
+            return Y_INT
+        elif base_type == T_STRING:
+            return Y_STR
+        else:
+            return Y_VOID
 
 
 def extract(tree, non_terminal, index=0):
